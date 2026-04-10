@@ -17,6 +17,7 @@ import {
 } from "../../services/appointmentService";
 import { createClient } from "../../services/clientService";
 import { getCurrentUser } from "../../services/api";
+import { showErrorAlert } from "../../utils/alerts";
 import "../../styles/dashboard/dashboard.css";
 
 const REFRESH_MS = 30000;
@@ -159,7 +160,7 @@ export default function DashboardPage() {
       }
 
       closeReagendamentoModal();
-      alert(err.message || "Nao foi possivel carregar os horarios para reagendamento.");
+      await showErrorAlert(err.message || "Não foi possível carregar os horários para reagendamento.");
       return;
     }
 
@@ -187,7 +188,7 @@ export default function DashboardPage() {
       await updateAppointment(appt, { status: nextStatus });
       await loadDashboard();
     } catch (err) {
-      alert(err.message || "Não foi possivel atualizar o agendamento.");
+      await showErrorAlert(err.message || "Não foi possível atualizar o agendamento.");
     }
   }
 
@@ -209,7 +210,7 @@ export default function DashboardPage() {
 
       await loadDashboard();
     } catch (err) {
-      alert(err.message || "Nao foi possivel atualizar o agendamento.");
+      await showErrorAlert(err.message || "Não foi possível atualizar o agendamento.");
       return false;
     }
 
@@ -221,7 +222,7 @@ export default function DashboardPage() {
       await createAppointment(appointment);
       await loadDashboard();
     } catch (err) {
-      alert(err.message || "Não foi possivel criar o agendamento.");
+      await showErrorAlert(err.message || "Não foi possível criar o agendamento.");
       return false;
     }
 
@@ -245,7 +246,7 @@ export default function DashboardPage() {
         ...current,
       ]);
     } catch (err) {
-      alert(err.message || "Não foi possivel cadastrar o cliente.");
+      await showErrorAlert(err.message || "Não foi possível cadastrar o cliente.");
       return false;
     }
 

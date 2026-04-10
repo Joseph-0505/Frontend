@@ -1,15 +1,28 @@
 import { statusColor, statusLabel } from "../../utils/StatusUtils";
 import formatCurrency from "../../utils/formatters";
 
-export default function AgendaSlotCard({ appointment, onClick }) {
+export default function AgendaSlotCard({
+  appointment,
+  draggable = false,
+  isDragging = false,
+  isDropSettled = false,
+  onClick,
+  onDragEnd,
+  onDragStart,
+}) {
   const status = appointment.status || "cancelado";
+  const className = `agenda-slot-card${isDragging ? " is-dragging" : ""}${isDropSettled ? " is-drop-settled" : ""}`;
 
   return (
     <button
       type="button"
-      className="agenda-slot-card"
+      className={className}
       aria-label={`Abrir agendamento de ${appointment.cliente}`}
+      aria-grabbed={isDragging}
+      draggable={draggable}
       onClick={onClick}
+      onDragEnd={onDragEnd}
+      onDragStart={onDragStart}
       data-status={status}
       style={{
         "--slot-surface": statusColor(status),

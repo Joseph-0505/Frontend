@@ -5,6 +5,7 @@ import {
   getWeekDays,
   toIsoLocal,
 } from "./useAgendaWeekNavigation";
+import { showWarningAlert } from "../utils/alerts";
 
 const DAY_LOADING_DELAY_MS = 180;
 
@@ -217,7 +218,7 @@ export default function useReschedule({
     }
 
     if (!selectedDay || !selectedHour) {
-      alert("Selecione um horario.");
+      await showWarningAlert("Selecione um horario.");
       return;
     }
 

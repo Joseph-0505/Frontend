@@ -1,11 +1,6 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "./api";
 
 const SERVICES_BASE_PATH = "/api/v1/services";
-const RISK_LABELS = {
-  baixo: "Baixo",
-  medio: "Medio",
-  alto: "Alto",
-};
 
 function inferServiceIcon(name) {
   const normalizedName = String(name || "").toLowerCase();
@@ -19,7 +14,6 @@ function inferServiceIcon(name) {
 }
 
 function toServiceViewModel(service) {
-  const risk = service.risk || "baixo";
   const icon = service.icon || inferServiceIcon(service.name);
 
   return {
@@ -30,9 +24,6 @@ function toServiceViewModel(service) {
     durationMinutes: Number(service.durationMinutes || 0),
     active: Boolean(service.active),
     status: service.active ? "ativo" : "inativo",
-    risk,
-    riskTone: service.riskTone || risk,
-    riskLabel: service.riskLabel || RISK_LABELS[risk] || "Nao informado",
     icon,
     soldCount: Number(service.soldCount || 0),
   };
@@ -48,7 +39,6 @@ function toServicePayload(input) {
     price: Number(input.price || 0),
     durationMinutes: Number(input.durationMinutes || 0),
     active,
-    ...(String(input.risk || "").trim() ? { risk: String(input.risk).trim().toLowerCase() } : {}),
     ...(String(input.icon || "").trim() ? { icon: String(input.icon).trim() } : {}),
     ...(String(input.description || input.notes || "").trim()
       ? { description: String(input.description || input.notes || "").trim() }
@@ -56,12 +46,24 @@ function toServicePayload(input) {
   };
 }
 
-export async function listServices({ active, risk, limit = 10, page = 1, search = "" } = {}) {
+export async function listServices({
+  active,
+  limit = 10,
+  maxDurationMinutes,
+  maxPrice,
+  minDurationMinutes,
+  minPrice,
+  page = 1,
+  search = "",
+} = {}) {
   const response = await apiGet(SERVICES_BASE_PATH, {
     query: {
       active,
-      risk,
       limit,
+      ...(typeof maxDurationMinutes === "number" ? { maxDurationMinutes } : {}),
+      ...(typeof maxPrice === "number" ? { maxPrice } : {}),
+      ...(typeof minDurationMinutes === "number" ? { minDurationMinutes } : {}),
+      ...(typeof minPrice === "number" ? { minPrice } : {}),
       page,
       search,
     },

@@ -11,10 +11,7 @@ import {
 } from "lucide-react";
 import DropdownActions from "../buttons/DropdownActions";
 import formatCurrency, { formatDuration } from "../../utils/formatters";
-
-function statusLabel(status) {
-  return status === "ativo" ? "Ativo" : "Inativo";
-}
+import { statusLabel } from "../../utils/StatusUtils";
 
 const SERVICE_ICON_MAP = {
   drop: Droplets,
@@ -28,14 +25,14 @@ const SERVICE_ICON_MAP = {
   wand: WandSparkles,
 };
 
-const DEFAULT_ACTIONS = ["Editar"];
+const DEFAULT_ACTIONS = ["Visualizar", "Editar", "Excluir"];
 
 export default function ServicoRow({ actions = DEFAULT_ACTIONS, onAction, service }) {
   const ServiceIcon = SERVICE_ICON_MAP[service.icon] || Smile;
   const resolvedActions = typeof actions === "function" ? actions(service) : actions;
 
   return (
-    <article className="service-row">
+    <article className={`service-row${service.status === "inativo" ? " service-row-inactive" : ""}`}>
       <div className="service-col service-col-main">
         <span className={`service-row-icon service-row-icon-${service.icon}`}>
           <ServiceIcon size={28} aria-hidden="true" />
@@ -43,23 +40,17 @@ export default function ServicoRow({ actions = DEFAULT_ACTIONS, onAction, servic
 
         <div className="service-main-copy">
           <strong>{service.name}</strong>
+          <span>{service.description || "Sem descricao cadastrada."}</span>
         </div>
       </div>
 
-      <div className="service-col">
+      <div className="service-col service-col-price">
         <strong>{formatCurrency(service.price)}</strong>
       </div>
 
       <div className="service-col service-col-duration">
         <Clock size={18} />
         <span>{formatDuration(service.durationMinutes)}</span>
-      </div>
-
-      <div className="service-col">
-        <span className={`service-badge service-badge-risk-${service.riskTone}`}>
-          <span className="service-badge-dot" />
-          {service.riskLabel}
-        </span>
       </div>
 
       <div className="service-col">

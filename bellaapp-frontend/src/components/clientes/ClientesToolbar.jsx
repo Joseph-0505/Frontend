@@ -13,6 +13,7 @@ export default function ClientesToolbar({
   return (
     <div className="clientes-toolbar">
       <div className="clientes-toolbar-filters">
+       
         <SearchStatusFilters
           searchValue={search}
           onSearchChange={onSearchChange}

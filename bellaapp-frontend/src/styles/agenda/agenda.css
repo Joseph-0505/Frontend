@@ -65,6 +65,15 @@
 
 .agenda-slot-cell {
   min-width: 160px;
+  transition: background-color 0.18s ease;
+}
+
+.agenda-slot-cell.is-drop-target {
+  background: rgba(232, 160, 191, 0.08);
+}
+
+.agenda-slot-cell.is-drop-invalid {
+  background: rgba(157, 29, 63, 0.05);
 }
 
 /* Empty cells stay quiet, while occupied cards carry the visual weight of the grid. */
@@ -110,6 +119,14 @@
     opacity 0.18s ease;
 }
 
+.agenda-slot-card[draggable="true"] {
+  cursor: grab;
+}
+
+.agenda-slot-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
 .agenda-slot-card::before {
   content: "";
   position: absolute;
@@ -150,6 +167,17 @@
   transform: translateY(-1px);
   border-color: var(--border-primary);
   box-shadow: var(--shadow-card-soft);
+}
+
+.agenda-slot-card.is-dragging {
+  opacity: 0.52;
+  transform: scale(0.98);
+  box-shadow: var(--shadow-card-subtle);
+  cursor: grabbing;
+}
+
+.agenda-slot-card.is-drop-settled {
+  animation: agendaSlotDropSettled 0.36s ease;
 }
 
 .agenda-slot-card:focus-visible {
@@ -272,9 +300,33 @@
   box-shadow: var(--shadow-card-subtle);
 }
 
+.agenda-slot-cell.is-drop-target .agenda-slot-free {
+  transform: translateY(-1px);
+  border-style: solid;
+  border-color: rgba(217, 126, 164, 0.58);
+  background: rgba(252, 241, 246, 0.96);
+  box-shadow:
+    0 0 0 3px rgba(217, 126, 164, 0.14),
+    var(--shadow-card-subtle);
+}
+
 .agenda-slot-cell.is-empty:hover .agenda-slot-free::after {
   opacity: 1;
   transform: translateY(0);
+}
+
+.agenda-slot-cell.is-drop-target .agenda-slot-free::after {
+  content: "Soltar aqui";
+  opacity: 1;
+  transform: translateY(0);
+  color: var(--primary-dark);
+}
+
+.agenda-slot-cell.is-drop-invalid .agenda-slot-card,
+.agenda-slot-cell.is-drop-invalid .agenda-slot-filtered,
+.agenda-slot-cell.is-drop-invalid .agenda-slot-free {
+  border-color: rgba(157, 29, 63, 0.32);
+  box-shadow: 0 0 0 2px rgba(157, 29, 63, 0.08);
 }
 
 .agenda-slot-filtered {
@@ -298,6 +350,27 @@
   border-color: var(--border-primary);
   background: var(--surface-hover-soft-alt);
   box-shadow: var(--shadow-card-subtle), var(--focus-ring);
+}
+
+@keyframes agendaSlotDropSettled {
+  0% {
+    transform: scale(0.96);
+    box-shadow:
+      0 0 0 0 rgba(217, 126, 164, 0.3),
+      var(--shadow-card-soft);
+  }
+
+  60% {
+    transform: scale(1.01);
+    box-shadow:
+      0 0 0 8px rgba(217, 126, 164, 0),
+      var(--shadow-card-soft);
+  }
+
+  100% {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card-soft);
+  }
 }
 
 .agenda-side {

@@ -1,12 +1,6 @@
 import { useState } from "react";
 import FormModalShell from "./FormModalShell";
 
-const RISK_OPTIONS = [
-  { value: "baixo", label: "Baixo" },
-  { value: "medio", label: "Medio" },
-  { value: "alto", label: "Alto" },
-];
-
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
   { value: "inativo", label: "Inativo" },
@@ -26,7 +20,7 @@ const ICON_OPTIONS = [
 
 export default function NovoServico({
   closeOnSave = true,
-  description = "Defina precificacao, duracao e risco para manter o catalogo operacional da clinica.",
+  description = "Defina preco, duracao e status para manter o catalogo de servicos atualizado.",
   initialValues = {},
   onClose,
   onSave,
@@ -40,7 +34,6 @@ export default function NovoServico({
       price: "",
       durationMinutes: "60",
       description: "",
-      risk: "baixo",
       status: "ativo",
       icon: "face",
     };
@@ -72,7 +65,6 @@ export default function NovoServico({
         price: Number(formData.price) || 0,
         durationMinutes: Number(formData.durationMinutes) || 60,
         description: formData.description.trim(),
-        risk: formData.risk,
         status: formData.status,
         icon: formData.icon,
       });
@@ -142,33 +134,20 @@ export default function NovoServico({
           </div>
 
           {showCatalogExtras ? (
-            <>
-              <div className="form-modal-field">
-                <label htmlFor="novo-servico-risco">Nivel de risco</label>
-                <select id="novo-servico-risco" name="risk" value={formData.risk} onChange={handleChange}>
-                  {RISK_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-modal-field">
-                <label htmlFor="novo-servico-icone">Icone</label>
-                <select id="novo-servico-icone" name="icon" value={formData.icon} onChange={handleChange}>
-                  {ICON_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </>
+            <div className="form-modal-field">
+              <label htmlFor="novo-servico-icone">Icone</label>
+              <select id="novo-servico-icone" name="icon" value={formData.icon} onChange={handleChange}>
+                {ICON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           ) : null}
 
           <div className="form-modal-field form-modal-field-full">
-            <label htmlFor="novo-servico-detalhes">{showCatalogExtras ? "Detalhes operacionais" : "Descricao"}</label>
+            <label htmlFor="novo-servico-detalhes">{showCatalogExtras ? "Detalhes do servico" : "Descricao"}</label>
             <textarea
               id="novo-servico-detalhes"
               name="description"
@@ -176,23 +155,12 @@ export default function NovoServico({
               onChange={handleChange}
               placeholder={
                 showCatalogExtras
-                  ? "Ex: exige cabine 2, anestesico topico ou preparo previo."
+                  ? "Ex: combinacoes indicadas, preparo previo ou observacoes internas."
                   : "Descreva rapidamente o servico."
               }
             />
           </div>
         </div>
-
-        {showCatalogExtras ? (
-          <div className="form-modal-helper">
-            <strong>Observacao:</strong> risco e icone ja podem ser persistidos pela API. O servico entra ativo e
-            pode ser reutilizado em outras telas com `initialValues`.
-          </div>
-        ) : (
-          <div className="form-modal-helper">
-            <strong>API:</strong> nesta tela sao persistidos apenas nome, descricao, preco, duracao e status.
-          </div>
-        )}
 
         <div className="form-modal-footer">
           <button

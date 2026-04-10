@@ -1,11 +1,17 @@
 import NovoServico from "../modals/NovoServico";
+import ServicoPreviewModal from "../modals/ServicoPreviewModal";
 
 export default function ServicosModals({
   editingService,
   newServiceModal,
   onCloseEditingService,
+  onCloseSelectedService,
   onCreateService,
+  onEditService,
+  onToggleServiceStatus,
   onUpdateService,
+  selectedService,
+  statusBusy = false,
 }) {
   return (
     <>
@@ -14,18 +20,28 @@ export default function ServicosModals({
           onClose={newServiceModal.close}
           onSave={onCreateService}
           showCatalogExtras
-          description="Cadastre nome, preço, duração, risco, ícone e status do serviço."
+          description="Cadastre nome, preco, duracao, icone e status do servico."
         />
       ) : null}
 
       {editingService ? (
         <NovoServico
-          title="Editar Serviço"
-          submitLabel="Salvar alterações"
+          title="Editar Servico"
+          submitLabel="Salvar alteracoes"
           initialValues={editingService}
           onClose={onCloseEditingService}
           onSave={onUpdateService}
           showCatalogExtras
+        />
+      ) : null}
+
+      {selectedService ? (
+        <ServicoPreviewModal
+          busy={statusBusy}
+          onClose={onCloseSelectedService}
+          onEdit={onEditService}
+          onToggleStatus={onToggleServiceStatus}
+          service={selectedService}
         />
       ) : null}
     </>

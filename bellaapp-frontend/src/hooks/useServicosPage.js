@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import useDisclosure from "./useDisclosure";
 import useUnauthorizedRedirect from "./useUnauthorizedRedirect";
 import { createService, deleteService, listServices, updateService } from "../services/serviceService";
@@ -14,14 +14,54 @@ function buildEmptyMeta(page, limit) {
   };
 }
 
+function getDurationRange(duration) {
+  if (duration === "ate-30") {
+    return { maxDurationMinutes: 30 };
+  }
+
+  if (duration === "30-60") {
+    return {
+      minDurationMinutes: 31,
+      maxDurationMinutes: 60,
+    };
+  }
+
+  if (duration === "60+") {
+    return { minDurationMinutes: 61 };
+  }
+
+  return {};
+}
+
+function getPriceRange(priceRange) {
+  if (priceRange === "ate-100") {
+    return { maxPrice: 100 };
+  }
+
+  if (priceRange === "100-200") {
+    return {
+      minPrice: 100.01,
+      maxPrice: 200,
+    };
+  }
+
+  if (priceRange === "200+") {
+    return { minPrice: 200.01 };
+  }
+
+  return {};
+}
+
 export default function useServicosPage() {
   const [services, setServices] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("todos");
-  const [risk, setRisk] = useState("todos");
+  const [duration, setDuration] = useState("todos");
+  const [priceRange, setPriceRange] = useState("todos");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [editingService, setEditingService] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
@@ -43,7 +83,8 @@ export default function useServicosPage() {
           limit: pageSize,
           search: deferredSearch,
           active: status === "todos" ? undefined : status === "ativo",
-          risk: risk === "todos" ? undefined : risk,
+          ...getDurationRange(duration),
+          ...getPriceRange(priceRange),
         });
 
         if (!active) {
@@ -52,6 +93,20 @@ export default function useServicosPage() {
 
         setServices(response.items);
         setMeta(response.meta);
+        setEditingService((current) => {
+          if (!current) {
+            return current;
+          }
+
+          return response.items.find((service) => service.id === current.id) || current;
+        });
+        setSelectedService((current) => {
+          if (!current) {
+            return current;
+          }
+
+          return response.items.find((service) => service.id === current.id) || current;
+        });
       } catch (requestError) {
         if (!active) {
           return;
@@ -76,49 +131,12 @@ export default function useServicosPage() {
     return () => {
       active = false;
     };
-  }, [deferredSearch, page, pageSize, redirectToLogin, reloadKey, risk, status]);
+  }, [deferredSearch, duration, page, pageSize, priceRange, redirectToLogin, reloadKey, status]);
 
-  const visibleServices = useMemo(() => services, [services]);
+  const visibleServices = services;
   const totalPages = Math.max(meta.totalPages || 0, 1);
   const currentPage = Math.min(meta.page || page, totalPages);
-
-  const averageTicket = useMemo(() => {
-    if (!visibleServices.length) {
-      return 0;
-    }
-
-    return visibleServices.reduce((total, service) => total + service.price, 0) / visibleServices.length;
-  }, [visibleServices]);
-
-  const averageDuration = useMemo(() => {
-    if (!visibleServices.length) {
-      return 0;
-    }
-
-    return Math.round(
-      visibleServices.reduce((total, service) => total + service.durationMinutes, 0) / visibleServices.length
-    );
-  }, [visibleServices]);
-
-  const topService = useMemo(() => {
-    return visibleServices.reduce((currentTop, service) => {
-      if (!currentTop || service.soldCount > currentTop.soldCount) {
-        return service;
-      }
-
-      return currentTop;
-    }, null);
-  }, [visibleServices]);
-
-  const riskCounters = useMemo(() => {
-    return visibleServices.reduce(
-      (accumulator, service) => {
-        accumulator[service.risk] = (accumulator[service.risk] || 0) + 1;
-        return accumulator;
-      },
-      { baixo: 0, medio: 0, alto: 0 }
-    );
-  }, [visibleServices]);
+  const footerLabel = meta.total === 1 ? "1 servico cadastrado" : `${meta.total} servicos cadastrados`;
 
   async function handleCreateService(serviceData) {
     try {
@@ -150,12 +168,28 @@ export default function useServicosPage() {
     return true;
   }
 
-  async function handleToggleServiceStatus(service, nextActive) {
+  async function handleToggleServiceStatus(service, nextActive = !service.active) {
+    const nextStatus = nextActive ? "ativo" : "inativo";
+
     try {
       await updateService(service.id, {
         ...service,
         active: nextActive,
+        status: nextStatus,
       });
+
+      setSelectedService((current) => {
+        if (!current || current.id !== service.id) {
+          return current;
+        }
+
+        return {
+          ...current,
+          active: nextActive,
+          status: nextStatus,
+        };
+      });
+
       setReloadKey((current) => current + 1);
     } catch (requestError) {
       alert(requestError.message || "Nao foi possivel atualizar o status do servico.");
@@ -172,6 +206,14 @@ export default function useServicosPage() {
     try {
       await deleteService(service.id);
 
+      if (selectedService?.id === service.id) {
+        setSelectedService(null);
+      }
+
+      if (editingService?.id === service.id) {
+        setEditingService(null);
+      }
+
       if (services.length === 1 && currentPage > 1) {
         setPage((current) => Math.max(1, current - 1));
         return;
@@ -183,14 +225,33 @@ export default function useServicosPage() {
     }
   }
 
+  function openServicePreview(service) {
+    setSelectedService(service);
+  }
+
+  function handleStartEdit(service) {
+    setSelectedService(null);
+    setEditingService(service);
+  }
+
   async function handleServiceAction(service, action) {
+    if (action === "Visualizar") {
+      openServicePreview(service);
+      return;
+    }
+
     if (action === "Editar") {
-      setEditingService(service);
+      handleStartEdit(service);
       return;
     }
 
     if (action === "Ativar") {
       await handleToggleServiceStatus(service, true);
+      return;
+    }
+
+    if (action === "Inativar") {
+      await handleToggleServiceStatus(service, false);
       return;
     }
 
@@ -200,7 +261,7 @@ export default function useServicosPage() {
   }
 
   function getServiceRowActions(service) {
-    return ["Editar", ...(service.status === "inativo" ? ["Ativar"] : []), "Excluir"];
+    return ["Visualizar", "Editar", service.status === "inativo" ? "Ativar" : "Inativar", "Excluir"];
   }
 
   function handleSearchChange(value) {
@@ -213,8 +274,13 @@ export default function useServicosPage() {
     setPage(1);
   }
 
-  function handleRiskChange(value) {
-    setRisk(value);
+  function handleDurationChange(value) {
+    setDuration(value);
+    setPage(1);
+  }
+
+  function handlePriceRangeChange(value) {
+    setPriceRange(value);
     setPage(1);
   }
 
@@ -232,33 +298,36 @@ export default function useServicosPage() {
   }
 
   return {
-    averageDuration,
-    averageTicket,
     closeEditingService: () => setEditingService(null),
+    closeSelectedService: () => setSelectedService(null),
     currentPage,
+    duration,
     editingService,
     error,
+    footerLabel,
     goToNextPage,
     goToPrevPage,
     handleCreateService,
+    handleDurationChange,
     handlePageSizeChange,
-    handleRiskChange,
+    handlePriceRangeChange,
     handleSearchChange,
     handleServiceAction,
+    handleStartEdit,
     handleStatusChange,
+    handleToggleServiceStatus,
     handleUpdateService,
     loading,
     newServiceModal,
+    openServicePreview,
     pageSize,
     pageSizeOptions: PAGE_SIZE_OPTIONS,
-    risk,
-    riskCounters,
+    priceRange,
     rowActions: getServiceRowActions,
     search,
+    selectedService,
     status,
-    topService,
     totalPages,
-    totalServices: meta.total,
     visibleServices,
   };
 }

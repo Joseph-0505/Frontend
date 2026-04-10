@@ -17,6 +17,7 @@ import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
 import useAgendaWeekNavigation from "../../hooks/useAgendaWeekNavigation";
 import useAgendaData from "../../hooks/useAgendaData";
 import useAgendaMetrics from "../../hooks/useAgendaMetrics";
+import { showErrorAlert } from "../../utils/alerts";
 
 import "../../styles/agenda/agenda.css";
 import "../../styles/dashboard/agenda-table.css";
@@ -116,7 +117,7 @@ export default function AgendaPage() {
     try {
       await createAppointment(appointment);
     } catch (requestError) {
-      alert(requestError.message || "Não foi possível criar o agendamento.");
+      await showErrorAlert(requestError.message || "Não foi possível criar o agendamento.");
       return false;
     }
 
@@ -127,7 +128,7 @@ export default function AgendaPage() {
     try {
       await updateAppointment(id, changes);
     } catch (requestError) {
-      alert(requestError.message || "Não foi possível atualizar o agendamento.");
+      await showErrorAlert(requestError.message || "Não foi possível atualizar o agendamento.");
       return false;
     }
 
@@ -139,7 +140,7 @@ export default function AgendaPage() {
       await createClient(client);
       refreshAgendaData();
     } catch (requestError) {
-      alert(requestError.message || "Não foi possível criar o cliente.");
+      await showErrorAlert(requestError.message || "Não foi possível criar o cliente.");
       return false;
     }
 
@@ -189,6 +190,7 @@ export default function AgendaPage() {
                 filtersActive={hasFilters}
                 hours={hours}
                 onCreate={openNewAppointment}
+                onMoveAppointment={handleUpdateAppointment}
                 onSelect={openModal}
                 visibleAppointmentIds={visibleAppointmentIds}
               />

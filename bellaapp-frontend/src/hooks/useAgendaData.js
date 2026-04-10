@@ -1,9 +1,51 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   createAgendaAppointment,
   getAgendaData,
   updateAgendaAppointment,
 } from "../services/agendaService";
+
+function replaceAppointment(currentAppointments, appointmentId, nextAppointment) {
+  return currentAppointments.map((appointment) =>
+    appointment.id === appointmentId ? nextAppointment : appointment
+  );
+}
+
+function buildOptimisticAppointment(currentAppointment, changes, professionals) {
+  if (!currentAppointment || typeof changes === "string") {
+    return {
+      ...currentAppointment,
+      status: typeof changes === "string" ? changes : currentAppointment?.status,
+    };
+  }
+
+  const nextStatus = changes.status || currentAppointment.status;
+  const nextDay = changes.day || currentAppointment.day;
+  const nextHour = changes.hour || currentAppointment.hour;
+  const nextNotes = Object.prototype.hasOwnProperty.call(changes, "notes")
+    ? changes.notes
+    : Object.prototype.hasOwnProperty.call(changes, "observacoes")
+      ? changes.observacoes
+      : currentAppointment.notes || currentAppointment.observacoes || "";
+  const nextProfessionalId = Object.prototype.hasOwnProperty.call(changes, "professionalId")
+    ? changes.professionalId || ""
+    : currentAppointment.professionalId || "";
+  const nextProfessional =
+    nextProfessionalId === currentAppointment.professionalId
+      ? currentAppointment.profissional
+      : professionals.find((professional) => professional.id === nextProfessionalId)?.name || "";
+
+  return {
+    ...currentAppointment,
+    day: nextDay,
+    hour: nextHour,
+    status: nextStatus,
+    notes: nextNotes,
+    observacoes: nextNotes,
+    professionalId: nextProfessionalId,
+    profissional: nextProfessional,
+  };
+}
 
 export default function useAgendaData(currentDate) {
   const [loading, setLoading] = useState(true);
@@ -63,16 +105,30 @@ export default function useAgendaData(currentDate) {
     return result;
   }
 
-  async function updateAppointment(id, changes) {
+  const updateAppointment = useCallback(async (id, changes) => {
     const currentAppointment = appointments.find((appointment) => appointment.id === id);
     if (!currentAppointment) {
       return false;
     }
 
-    const result = await updateAgendaAppointment(currentAppointment, changes);
-    setReloadKey((current) => current + 1);
-    return result;
-  }
+    const optimisticAppointment = buildOptimisticAppointment(currentAppointment, changes, professionals);
+    setAppointments((current) => replaceAppointment(current, id, optimisticAppointment));
+
+    try {
+      const result = await updateAgendaAppointment(currentAppointment, changes);
+
+      if (!result) {
+        setAppointments((current) => replaceAppointment(current, id, currentAppointment));
+        return false;
+      }
+
+      setAppointments((current) => replaceAppointment(current, id, result));
+      return result;
+    } catch (error) {
+      setAppointments((current) => replaceAppointment(current, id, currentAppointment));
+      throw error;
+    }
+  }, [appointments, professionals]);
 
   function refreshAgendaData() {
     setReloadKey((current) => current + 1);

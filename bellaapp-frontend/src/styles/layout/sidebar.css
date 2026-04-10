@@ -49,10 +49,16 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
+  width: 100%;
   padding: 12px 16px;
+  border: 0;
+  background: transparent;
   border-radius: 12px;
   color: var(--text);
   font-weight: 500;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   transition:

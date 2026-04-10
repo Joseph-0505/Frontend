@@ -6,6 +6,7 @@ import AgendaPage from "./pages/agenda/AgendaPage";
 import AuthPage from "./pages/auth/AuthPage";
 import ClientesPage from "./pages/clientes/ClientesPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import RoomsPage from "./pages/rooms/RoomsPage";
 import ServicosPage from "./pages/servicos/ServicosPage";
 import ProfissionaisPage from "./pages/profissionais/ProfissionaisPage";
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/clientes" element={<ClientesPage />} />
+          <Route path="/rooms" element={<RoomsPage />} />
           <Route path="/servicos" element={<ServicosPage />} />
           <Route path="/profissionais" element={<ProfissionaisPage />} />
         </Route>

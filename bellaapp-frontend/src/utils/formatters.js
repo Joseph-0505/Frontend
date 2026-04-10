@@ -5,22 +5,38 @@ export default function formatCurrency(value) {
   }).format(Number(value || 0));
 }
 
-export function formatPhone(value) {
+function getDigits(value, maxLength) {
   const digits = String(value || "").replace(/\D/g, "");
+
+  if (typeof maxLength === "number") {
+    return digits.slice(0, maxLength);
+  }
+
+  return digits;
+}
+
+export function formatPhone(value) {
+  const digits = getDigits(value, 11);
 
   if (!digits) {
     return "";
   }
 
-  if (digits.length <= 10) {
-    return digits.replace(/^(\d{2})(\d{4})(\d{0,4}).*$/, (_, ddd, prefix, suffix) =>
-      suffix ? `(${ddd}) ${prefix}-${suffix}` : `(${ddd}) ${prefix}`
-    );
+  if (digits.length <= 2) {
+    return `(${digits}`;
   }
 
-  return digits.replace(/^(\d{2})(\d{5})(\d{0,4}).*$/, (_, ddd, prefix, suffix) =>
-    suffix ? `(${ddd}) ${prefix}-${suffix}` : `(${ddd}) ${prefix}`
-  );
+  const ddd = digits.slice(0, 2);
+  const phoneNumber = digits.slice(2);
+  const prefixLength = digits.length > 10 ? 5 : 4;
+  const prefix = phoneNumber.slice(0, prefixLength);
+  const suffix = phoneNumber.slice(prefixLength);
+
+  if (!suffix) {
+    return `(${ddd}) ${prefix}`;
+  }
+
+  return `(${ddd}) ${prefix}-${suffix}`;
 }
 
 function formatDuration(minutes) {
@@ -31,6 +47,36 @@ function formatDuration(minutes) {
   }
 
   return `${totalMinutes}min`;
+}
+
+export function formatCpf(value) {
+  const digits = getDigits(value, 11);
+
+  if (!digits) {
+    return "";
+  }
+
+  if (digits.length <= 3) {
+    return digits;
+  }
+
+  if (digits.length <= 6) {
+    return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  }
+
+  if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  }
+
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+export function normalizeCpf(value) {
+  return getDigits(value, 11);
+}
+
+export function normalizeEmail(value) {
+  return String(value || "").replace(/\s+/g, "").toLowerCase();
 }
 
 export { formatDuration };

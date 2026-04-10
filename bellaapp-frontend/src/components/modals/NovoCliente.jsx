@@ -1,5 +1,6 @@
 import { useState } from "react";
 import FormModalShell from "./FormModalShell";
+import { formatCpf, formatPhone, normalizeCpf, normalizeEmail } from "../../utils/formatters";
 
 export default function NovoCliente({
   closeOnSave = true,
@@ -12,9 +13,9 @@ export default function NovoCliente({
 }) {
   const [formData, setFormData] = useState(() => ({
     name: initialValues.name || "",
-    email: initialValues.email || "",
-    phone: initialValues.phone || "",
-    cpf: initialValues.cpf || "",
+    email: normalizeEmail(initialValues.email || ""),
+    phone: formatPhone(initialValues.phone || ""),
+    cpf: formatCpf(initialValues.cpf || ""),
     notes: initialValues.notes || "",
   }));
   const [submitting, setSubmitting] = useState(false);
@@ -24,7 +25,14 @@ export default function NovoCliente({
 
     setFormData((current) => ({
       ...current,
-      [name]: value,
+      [name]:
+        name === "phone"
+          ? formatPhone(value)
+          : name === "cpf"
+            ? formatCpf(value)
+            : name === "email"
+              ? normalizeEmail(value)
+              : value,
     }));
   }
 
@@ -35,9 +43,9 @@ export default function NovoCliente({
     try {
       const result = await onSave?.({
         name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        cpf: formData.cpf.trim(),
+        email: normalizeEmail(formData.email),
+        phone: formatPhone(formData.phone).trim(),
+        cpf: normalizeCpf(formData.cpf),
         notes: formData.notes.trim(),
       });
 
@@ -74,6 +82,10 @@ export default function NovoCliente({
               value={formData.email}
               onChange={handleChange}
               placeholder="cliente@empresa.com"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
@@ -82,9 +94,12 @@ export default function NovoCliente({
             <input
               id="novo-cliente-telefone"
               name="phone"
+              type="tel"
               value={formData.phone}
               onChange={handleChange}
               placeholder="(11) 99999-9999"
+              inputMode="numeric"
+              maxLength={15}
               required
             />
           </div>
@@ -96,7 +111,9 @@ export default function NovoCliente({
               name="cpf"
               value={formData.cpf}
               onChange={handleChange}
-              placeholder="Digite o CPF"
+              placeholder="000.000.000-00"
+              inputMode="numeric"
+              maxLength={14}
             />
           </div>
 

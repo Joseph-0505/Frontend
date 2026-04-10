@@ -1,10 +1,30 @@
-import { NavLink } from "react-router-dom";
-import { Home, Calendar, Users, Briefcase, User, ChevronLeft, LogOut } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { Home, Calendar, Users, Briefcase, User, ChevronLeft, LogOut, DoorClosed } from "lucide-react";
+import { logout } from "../../services/authService";
+import { showConfirmAlert } from "../../utils/alerts";
 import "../../styles/layout/sidebar.css";
 import logo from "../../assets/logo.png";
 import logo2 from "../../assets/logo2.png";
 
 export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    const shouldLogout = await showConfirmAlert({
+      title: "Tem certeza que quer sair mesmo?",
+      text: "Sua sessao atual sera encerrada.",
+      confirmButtonText: "Sair",
+      cancelButtonText: "Continuar aqui",
+    });
+
+    if (!shouldLogout) {
+      return;
+    }
+
+    logout();
+    navigate("/login", { replace: true });
+  }
+
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       <div className="sidebar-header">
@@ -49,7 +69,12 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
 
         <NavLink to="/servicos" className="sidebar-link" aria-label="Servicos">
           <Briefcase size={18} />
-          {!collapsed && "Serviços"}
+          {!collapsed && "Servicos"}
+        </NavLink>
+
+        <NavLink to="/rooms" className="sidebar-link" aria-label="Salas">
+          <DoorClosed size={18} />
+          {!collapsed && "Salas"}
         </NavLink>
 
         <NavLink to="/profissionais" className="sidebar-link" aria-label="Profissionais">
@@ -57,10 +82,10 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
           {!collapsed && "Profissionais"}
         </NavLink>
 
-        <NavLink to="/logout" className="sidebar-link" aria-label="Sair">
-         <LogOut size={18}/>
+        <button type="button" className="sidebar-link" aria-label="Sair" onClick={handleLogout}>
+          <LogOut size={18} />
           {!collapsed && "Sair"}
-        </NavLink>
+        </button>
       </nav>
     </aside>
   );

@@ -1,12 +1,33 @@
 import { Search } from "lucide-react";
-import { CLIENT_STATUS_OPTIONS, SERVICE_RISK_OPTIONS } from "../../utils/StatusUtils";
+
+const STATUS_FILTERS = [
+  { value: "todos", label: "Todos" },
+  { value: "ativo", label: "Ativos" },
+  { value: "inativo", label: "Inativos" },
+];
+
+const DURATION_OPTIONS = [
+  { value: "todos", label: "Todas duracoes" },
+  { value: "ate-30", label: "Ate 30min" },
+  { value: "30-60", label: "30-60min" },
+  { value: "60+", label: "60min+" },
+];
+
+const PRICE_RANGE_OPTIONS = [
+  { value: "todos", label: "Todos os precos" },
+  { value: "ate-100", label: "Ate R$100" },
+  { value: "100-200", label: "R$100-R$200" },
+  { value: "200+", label: "R$200+" },
+];
 
 export default function ServicosToolbar({
+  duration = "todos",
   loading = false,
+  onDurationChange,
+  onPriceRangeChange,
   onSearchChange,
-  onRiskChange,
   onStatusChange,
-  risk = "todos",
+  priceRange = "todos",
   search,
   status,
 }) {
@@ -18,17 +39,35 @@ export default function ServicosToolbar({
           type="text"
           value={search}
           onChange={(event) => onSearchChange?.(event.target.value)}
-          placeholder="Buscar serviço..."
+          placeholder="Buscar servico..."
         />
       </label>
 
+      <div className="services-filter-group">
+        <span className="services-filter-label">Status</span>
+
+        <div className="services-chip-group" role="group" aria-label="Filtrar por status">
+          {STATUS_FILTERS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className={`services-chip${status === option.value ? " is-active" : ""}`}
+              onClick={() => onStatusChange?.(option.value)}
+              disabled={loading}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <label className="services-select">
         <select
-          value={status}
-          onChange={(event) => onStatusChange?.(event.target.value)}
+          value={duration}
+          onChange={(event) => onDurationChange?.(event.target.value)}
           disabled={loading}
         >
-          {CLIENT_STATUS_OPTIONS.map((option) => (
+          {DURATION_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -37,8 +76,12 @@ export default function ServicosToolbar({
       </label>
 
       <label className="services-select">
-        <select value={risk} onChange={(event) => onRiskChange?.(event.target.value)} disabled={loading}>
-          {SERVICE_RISK_OPTIONS.map((option) => (
+        <select
+          value={priceRange}
+          onChange={(event) => onPriceRangeChange?.(event.target.value)}
+          disabled={loading}
+        >
+          {PRICE_RANGE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

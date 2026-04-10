@@ -1,13 +1,47 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
+import { listServices } from "../../services/serviceService";
 import FormModalShell from "./FormModalShell";
+import { formatPhone, normalizeEmail } from "../../utils/formatters";
 
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
   { value: "inativo", label: "Inativo" },
 ];
 
-function statusLabel(status) {
-  return status === "ativo" ? "Ativo" : "Inativo";
+function buildServiceOptions(services = [], currentSpecialty = "") {
+  const optionsByName = new Map();
+
+  services.forEach((service) => {
+    const name = String(service?.name || "").trim();
+
+    if (!name) {
+      return;
+    }
+
+    const normalizedName = name.toLowerCase();
+
+    if (!optionsByName.has(normalizedName)) {
+      optionsByName.set(normalizedName, { value: name, label: name });
+    }
+  });
+
+  const resolvedCurrentSpecialty = String(currentSpecialty || "").trim();
+
+  if (resolvedCurrentSpecialty) {
+    const normalizedCurrent = resolvedCurrentSpecialty.toLowerCase();
+
+    if (!optionsByName.has(normalizedCurrent)) {
+      optionsByName.set(normalizedCurrent, {
+        value: resolvedCurrentSpecialty,
+        label: `${resolvedCurrentSpecialty} (atual)`,
+      });
+    }
+  }
+
+  return Array.from(optionsByName.values()).sort((left, right) =>
+    left.label.localeCompare(right.label, "pt-BR", { sensitivity: "base" })
+  );
 }
 
 export default function NovoProfissional({
@@ -22,18 +56,76 @@ export default function NovoProfissional({
   const [formData, setFormData] = useState(() => ({
     name: initialValues.name || "",
     specialty: initialValues.specialty || initialValues.role || "",
-    email: initialValues.email || "",
-    phone: initialValues.phone || "",
+    email: normalizeEmail(initialValues.email || ""),
+    phone: formatPhone(initialValues.phone || ""),
     status: initialValues.status || "ativo",
   }));
+  const [services, setServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const redirectToLogin = useUnauthorizedRedirect();
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadServiceCatalog() {
+      try {
+        setServicesLoading(true);
+        setServicesError("");
+
+        const response = await listServices({
+          active: true,
+          limit: 100,
+          page: 1,
+        });
+
+        if (!active) {
+          return;
+        }
+
+        setServices(response.items);
+      } catch (requestError) {
+        if (!active) {
+          return;
+        }
+
+        setServices([]);
+        setServicesError(requestError.message || "Não foi possível carregar os serviços.");
+
+        if (requestError.status === 401) {
+          redirectToLogin();
+        }
+      } finally {
+        if (active) {
+          setServicesLoading(false);
+        }
+      }
+    }
+
+    loadServiceCatalog();
+
+    return () => {
+      active = false;
+    };
+  }, [redirectToLogin]);
+
+  const specialtyOptions = useMemo(
+    () => buildServiceOptions(services, formData.specialty),
+    [formData.specialty, services]
+  );
 
   function handleChange(event) {
     const { name, value } = event.target;
 
     setFormData((current) => ({
       ...current,
-      [name]: value,
+      [name]:
+        name === "phone"
+          ? formatPhone(value)
+          : name === "email"
+            ? normalizeEmail(value)
+            : value,
     }));
   }
 
@@ -45,8 +137,8 @@ export default function NovoProfissional({
       const result = await onSave?.({
         name: formData.name.trim(),
         specialty: formData.specialty.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        email: normalizeEmail(formData.email),
+        phone: formatPhone(formData.phone).trim(),
         status: formData.status,
       });
 
@@ -76,14 +168,26 @@ export default function NovoProfissional({
 
           <div className="form-modal-field">
             <label htmlFor="novo-profissional-especialidade">Especialidade</label>
-            <input
+            <select
               id="novo-profissional-especialidade"
               name="specialty"
               value={formData.specialty}
               onChange={handleChange}
-              placeholder="Ex: Fisioterapeuta"
               required
-            />
+            >
+              <option value="">
+                {servicesLoading
+                  ? "Carregando serviços..."
+                  : specialtyOptions.length > 0
+                    ? "Selecione um serviço"
+                    : "Nenhum serviço cadastrado"}
+              </option>
+              {specialtyOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-modal-field">
@@ -106,6 +210,10 @@ export default function NovoProfissional({
               value={formData.email}
               onChange={handleChange}
               placeholder="profissional@empresa.com"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
@@ -114,18 +222,22 @@ export default function NovoProfissional({
             <input
               id="novo-profissional-telefone"
               name="phone"
+              type="tel"
               value={formData.phone}
               onChange={handleChange}
               placeholder="(11) 99999-9999"
+              inputMode="numeric"
+              maxLength={15}
               required
             />
           </div>
         </div>
 
-        <div className="form-modal-preview">
-          <strong>Preview:</strong> {formData.name.trim() || "Novo profissional"} |{" "}
-          {formData.specialty.trim() || "Especialidade"} | {statusLabel(formData.status)}
-        </div>
+        {servicesError ? (
+          <div className="form-modal-helper">
+            <strong>Serviços indisponíveis.</strong> Atualize a página para tentar carregar o catálogo novamente.
+          </div>
+        ) : null}
 
         <div className="form-modal-footer">
           <button

@@ -1,4 +1,4 @@
-import { formatPhone } from "../utils/formatters";
+import { formatPhone, normalizeCpf, normalizeEmail } from "../utils/formatters";
 import { apiDelete, apiGet, apiPost, apiPut } from "./api";
 
 const CLIENTS_BASE_PATH = "/api/v1/clients";
@@ -67,11 +67,14 @@ function toClientViewModel(client) {
 }
 
 function toClientPayload(input) {
+  const email = normalizeEmail(input.email);
+  const cpf = normalizeCpf(input.cpf);
+
   return {
     name: String(input.name || "").trim(),
-    phone: String(input.phone || "").trim(),
-    ...(String(input.email || "").trim() ? { email: String(input.email).trim() } : {}),
-    ...(String(input.cpf || "").trim() ? { cpf: String(input.cpf).trim() } : {}),
+    phone: formatPhone(input.phone).trim(),
+    ...(email ? { email } : {}),
+    ...(cpf ? { cpf } : {}),
     ...(String(input.notes || "").trim() ? { notes: String(input.notes).trim() } : {}),
   };
 }

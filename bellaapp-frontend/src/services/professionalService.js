@@ -1,14 +1,22 @@
+import { formatPhone, normalizeEmail } from "../utils/formatters";
 import { apiDelete, apiGet, apiPost, apiPut } from "./api";
 
 const PROFESSIONALS_BASE_PATH = "/api/v1/professionals";
 
 function toProfessionalViewModel(professional) {
+  const email = professional.email || "";
+  const phone = professional.phone || "";
+  const specialty = professional.specialty || "";
+
   return {
     id: professional.id,
     name: professional.name,
-    specialty: professional.specialty || "",
-    email: professional.email || "Sem e-mail",
-    phone: professional.phone || "",
+    specialty,
+    specialtyDisplay: specialty || "Sem especialidade",
+    email,
+    emailDisplay: email || "Sem e-mail",
+    phone,
+    phoneDisplay: formatPhone(phone) || "Sem telefone",
     status: professional.status || "ativo",
     initials: professional.initials || "",
     tone: professional.tone || "rose",
@@ -16,12 +24,14 @@ function toProfessionalViewModel(professional) {
 }
 
 function toProfessionalPayload(input) {
+  const email = normalizeEmail(input.email);
+
   return {
     name: String(input.name || "").trim(),
     specialty: String(input.specialty || "").trim(),
-    phone: String(input.phone || "").trim(),
+    phone: formatPhone(input.phone).trim(),
     status: String(input.status || "ativo").trim().toLowerCase(),
-    ...(String(input.email || "").trim() ? { email: String(input.email).trim().toLowerCase() } : {}),
+    ...(email ? { email } : {}),
   };
 }
 
