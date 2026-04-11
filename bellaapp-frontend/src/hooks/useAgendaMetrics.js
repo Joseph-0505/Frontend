@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { buildDayHourKey, createOccupiedSlotKeySet } from "../utils/timeUtils";
 
 function normalizeFilterValue(value) {
   return String(value || "")
@@ -61,9 +62,10 @@ export default function useAgendaMetrics({
       (appointment) => appointment.status === "pendente"
     ).length;
     const totalSlots = weekDays.length * hours.length;
-    const livresTotal = Math.max(totalSlots - totalAtendimentos, 0);
+    const busySlotKeys = createOccupiedSlotKeySet(weekAppointments, hours);
+    const livresTotal = Math.max(totalSlots - busySlotKeys.size, 0);
     const taxaOcupacao =
-      totalSlots > 0 ? Math.round((totalAtendimentos / totalSlots) * 100) : 0;
+      totalSlots > 0 ? Math.round((busySlotKeys.size / totalSlots) * 100) : 0;
 
     return {
       confirmados,
@@ -76,16 +78,11 @@ export default function useAgendaMetrics({
   }, [hours.length, weekAppointments, weekDays.length]);
 
   const livresAgora = useMemo(() => {
-    const busyKeys = new Set(
-      weekAppointments.map(
-        (appointment) =>
-          `${appointment.day}-${String(appointment.hour || "").padStart(5, "0")}`
-      )
-    );
+    const busyKeys = createOccupiedSlotKeySet(weekAppointments, hours);
 
     return weekDays
       .flatMap((day) => hours.map((hour) => ({ day: day.key, label: day.label, hour })))
-      .filter((slot) => !busyKeys.has(`${slot.day}-${slot.hour}`));
+      .filter((slot) => !busyKeys.has(buildDayHourKey(slot.day, slot.hour)));
   }, [hours, weekAppointments, weekDays]);
 
   const hasFilters = Boolean((term || "").trim()) || status !== "todos";

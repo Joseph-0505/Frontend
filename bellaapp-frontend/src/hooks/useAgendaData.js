@@ -4,6 +4,7 @@ import {
   getAgendaData,
   updateAgendaAppointment,
 } from "../services/agendaService";
+import { addMinutesToTime, getAppointmentDurationMinutes } from "../utils/timeUtils";
 
 function replaceAppointment(currentAppointments, appointmentId, nextAppointment) {
   return currentAppointments.map((appointment) =>
@@ -34,11 +35,13 @@ function buildOptimisticAppointment(currentAppointment, changes, professionals) 
     nextProfessionalId === currentAppointment.professionalId
       ? currentAppointment.profissional
       : professionals.find((professional) => professional.id === nextProfessionalId)?.name || "";
+  const durationMinutes = getAppointmentDurationMinutes(currentAppointment);
 
   return {
     ...currentAppointment,
     day: nextDay,
     hour: nextHour,
+    endHour: addMinutesToTime(nextHour, durationMinutes),
     status: nextStatus,
     notes: nextNotes,
     observacoes: nextNotes,

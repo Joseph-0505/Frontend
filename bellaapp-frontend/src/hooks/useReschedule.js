@@ -6,6 +6,12 @@ import {
   toIsoLocal,
 } from "./useAgendaWeekNavigation";
 import { showWarningAlert } from "../utils/alerts";
+import {
+  buildDayHourKey,
+  canAppointmentFitInSlots,
+  createOccupiedSlotKeySet,
+  getAppointmentDurationMinutes,
+} from "../utils/timeUtils";
 
 const DAY_LOADING_DELAY_MS = 180;
 
@@ -111,15 +117,22 @@ export default function useReschedule({
       return [];
     }
 
-    const busyKeys = new Set(
-      weekAppointments
-        .filter((item) => item.id !== appointment.id)
-        .map((item) => `${item.day}-${item.hour}`),
-    );
+    const busyKeys = createOccupiedSlotKeySet(weekAppointments, weekHours, {
+      excludeId: appointment.id,
+    });
+    const durationMinutes = getAppointmentDurationMinutes(appointment);
 
     return weekDays
       .flatMap((day) => weekHours.map((hour) => ({ day: day.key, label: day.label, hour })))
-      .filter((slot) => !busyKeys.has(`${slot.day}-${slot.hour}`));
+      .filter((slot) =>
+        canAppointmentFitInSlots({
+          day: slot.day,
+          hour: slot.hour,
+          durationMinutes,
+          slots: weekHours,
+          occupiedSlotKeys: busyKeys,
+        })
+      );
   }, [appointment, weekAppointments, weekDays, weekHours]);
 
   const availableDays = useMemo(() => {
@@ -135,10 +148,10 @@ export default function useReschedule({
       return [];
     }
 
-    const freeSlotKeys = new Set(allWeekFreeSlots.map((slot) => `${slot.day}-${slot.hour}`));
+    const freeSlotKeys = new Set(allWeekFreeSlots.map((slot) => buildDayHourKey(slot.day, slot.hour)));
 
     return weekHours.map((hour) => {
-      const key = `${selectedDay}-${hour}`;
+      const key = buildDayHourKey(selectedDay, hour);
       const isAvailable = freeSlotKeys.has(key);
       const isSelected = isAvailable && selectedHour === hour;
 

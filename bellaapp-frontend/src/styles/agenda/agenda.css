@@ -5,14 +5,15 @@
 
 .agenda-week-table {
   min-width: 880px;
+  --agenda-slot-unit-height: 60px;
 }
 
 .agenda-week-table th.agenda-hour-header,
 .agenda-week-table th.agenda-day-header-cell,
 .agenda-week-table td.agenda-hour-cell,
 .agenda-week-table td.agenda-slot-cell {
-  padding-top: 7px;
-  padding-bottom: 7px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .agenda-day-header-cell {
@@ -40,7 +41,7 @@
 }
 
 .agenda-week-table tbody td {
-  vertical-align: middle;
+  vertical-align: top;
 }
 
 .agenda-hour-header,
@@ -90,13 +91,13 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 5px;
+  justify-content: flex-start;
+  gap: 4px;
   width: 100%;
-  min-height: 92px;
+  min-height: calc(var(--agenda-slot-unit-height) * var(--slot-span, 1));
   border: 1px solid var(--border-primary-control);
-  border-radius: 16px;
-  padding: 10px 12px;
+  border-radius: 14px;
+  padding: 8px 10px;
   text-align: left;
   background:
     radial-gradient(
@@ -194,7 +195,7 @@
 
 .agenda-slot-title {
   color: var(--text-heading);
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 700;
   line-height: 1.25;
 }
@@ -214,7 +215,7 @@
 .agenda-slot-service {
   margin: 0;
   color: var(--text-ui);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.28;
 }
@@ -222,7 +223,7 @@
 .agenda-slot-text {
   margin: 0;
   color: var(--text-support);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   line-height: 1.28;
 }
 
@@ -237,6 +238,13 @@
   gap: 6px;
   margin-top: auto;
   padding-top: 2px;
+}
+
+.agenda-slot-time {
+  color: var(--text-muted-alt);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
 
 .agenda-slot-meta-label {
@@ -266,7 +274,7 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 92px;
+  min-height: var(--agenda-slot-unit-height);
   padding: 0;
   border: 1px dashed var(--border-primary-faint);
   border-radius: 16px;
@@ -334,10 +342,10 @@
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 92px;
+  min-height: calc(var(--agenda-slot-unit-height) * var(--slot-span, 1));
   padding: 10px 12px;
   border: 1px dashed var(--border-primary-faint);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.56);
   color: var(--text-muted-alt);
   font-size: 0.74rem;

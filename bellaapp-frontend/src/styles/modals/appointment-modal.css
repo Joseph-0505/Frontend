@@ -200,7 +200,6 @@
 .slot-btn.selected {
   border-color: rgba(216, 114, 154, 0.72);
   background: var(--gradient-primary);
-  color: var(--white);
   box-shadow: var(--shadow-primary);
 }
 

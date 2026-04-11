@@ -1,4 +1,6 @@
-export const DEFAULT_HOURS = ["09:00", "10:00", "11:00", "14:00", "15:00"];
+import { DEFAULT_TIME_SLOTS } from "./timeUtils";
+
+export const DEFAULT_HOURS = DEFAULT_TIME_SLOTS;
 
 export const API_STATUS_OPTIONS = [
   { value: "todos", label: "Todos status" },

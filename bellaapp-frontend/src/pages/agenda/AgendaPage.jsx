@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import AgendaHeader from "../../components/agenda/AgendaHeader";
 import AgendaWeekTable from "../../components/agenda/AgendaWeekTable";
 import SearchStatusFilters from "../../components/SearchStatusFilters";
-{/*import AgendaSidebar from "../../components/agenda/AgendaSidebar";*/}
 import AppointmentModal from "../../components/modals/AppointmentModal";
 import NovoAgendamento from "../../components/modals/NovoAgendamento";
 import NovoCliente from "../../components/modals/NovoCliente";

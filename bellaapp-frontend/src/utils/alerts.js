@@ -1,5 +1,6 @@
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
+import "../styles/sweetalert2-overrides.css";
 
 const BASE_ALERT_OPTIONS = {
   confirmButtonColor: "#d97ea4",
@@ -26,6 +27,17 @@ export function showInfoAlert(message, options = {}) {
     title: options.title || "Aviso",
     text: message,
     confirmButtonText: options.confirmButtonText || "Entendi",
+    ...options,
+  });
+}
+
+export function showSuccessAlert(message, options = {}) {
+  return Swal.fire({
+    ...BASE_ALERT_OPTIONS,
+    icon: "success",
+    title: options.title || "Tudo certo",
+    text: message,
+    confirmButtonText: options.confirmButtonText || "Continuar",
     ...options,
   });
 }

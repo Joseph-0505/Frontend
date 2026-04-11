@@ -1,13 +1,31 @@
+import { Briefcase, Calendar, ChevronLeft, CircleUserRound, DoorClosed, Home, LogOut, User, Users } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Home, Calendar, Users, Briefcase, User, ChevronLeft, LogOut, DoorClosed } from "lucide-react";
+import useAuth from "../../hooks/useAuth";
 import { logout } from "../../services/authService";
 import { showConfirmAlert } from "../../utils/alerts";
-import "../../styles/layout/sidebar.css";
 import logo from "../../assets/logo.png";
 import logo2 from "../../assets/logo2.png";
+import "../../styles/layout/sidebar.css";
+
+function buildInitials(name) {
+  const initials = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+  return initials || "BA";
+}
 
 export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const profileName = user?.businessProfile?.businessName || user?.name || "Minha conta";
+  const profileEmail = user?.email || "";
+  const profileInitials = buildInitials(profileName);
 
   async function handleLogout() {
     const shouldLogout = await showConfirmAlert({
@@ -81,12 +99,25 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
           <User size={18} />
           {!collapsed && "Profissionais"}
         </NavLink>
+      </nav>
+
+      <div className="sidebar-footer">
+        <NavLink to="/perfil" className="sidebar-user-card" aria-label="Meu perfil">
+          <span className="sidebar-user-avatar">{collapsed ? <CircleUserRound size={18} /> : profileInitials}</span>
+
+          {!collapsed ? (
+            <span className="sidebar-user-text">
+              <strong>{profileName}</strong>
+              <small>{profileEmail || "Sem email cadastrado"}</small>
+            </span>
+          ) : null}
+        </NavLink>
 
         <button type="button" className="sidebar-link" aria-label="Sair" onClick={handleLogout}>
           <LogOut size={18} />
           {!collapsed && "Sair"}
         </button>
-      </nav>
+      </div>
     </aside>
   );
 }

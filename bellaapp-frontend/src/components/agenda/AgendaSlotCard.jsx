@@ -6,6 +6,7 @@ export default function AgendaSlotCard({
   draggable = false,
   isDragging = false,
   isDropSettled = false,
+  slotSpan = 1,
   onClick,
   onDragEnd,
   onDragStart,
@@ -26,9 +27,9 @@ export default function AgendaSlotCard({
       data-status={status}
       style={{
         "--slot-surface": statusColor(status),
+        "--slot-span": slotSpan,
       }}
     >
-     
       <div className="agenda-slot-head">
         <strong className="agenda-slot-title">{appointment.cliente}</strong>
         <span className="agenda-slot-status">{statusLabel(status)}</span>
@@ -41,6 +42,12 @@ export default function AgendaSlotCard({
       ) : null}
 
       <div className="agenda-slot-footer">
+        {appointment.hour ? (
+          <span className="agenda-slot-time">
+            {appointment.hour}
+            {appointment.endHour ? ` - ${appointment.endHour}` : ""}
+          </span>
+        ) : null}
         <span className="agenda-slot-value">{formatCurrency(appointment.valorEstimado)}</span>
       </div>
     </button>

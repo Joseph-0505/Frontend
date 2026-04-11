@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AgendaTable from "../../components/dashboard/AgendaTable";
 import DashboardHeader from "../../components/dashboard/DashboardHeader";
 import KpiCard from "../../components/dashboard/KpiCard";
-{/*import RevenueCard from "../../components/dashboard/RevenueCard";*/}
 import TopServicesList from "../../components/dashboard/TopServicesList";
+import useAuth from "../../hooks/useAuth";
 import useDisclosure from "../../hooks/useDisclosure";
 import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
 import NovoAgendamento from "../../components/modals/NovoAgendamento";
@@ -16,8 +16,8 @@ import {
   updateAppointment,
 } from "../../services/appointmentService";
 import { createClient } from "../../services/clientService";
-import { getCurrentUser } from "../../services/api";
 import { showErrorAlert } from "../../utils/alerts";
+import { DEFAULT_TIME_SLOTS } from "../../utils/timeUtils";
 import "../../styles/dashboard/dashboard.css";
 
 const REFRESH_MS = 30000;
@@ -70,7 +70,7 @@ export default function DashboardPage() {
   const newAppointmentModal = useDisclosure();
   const newClientModal = useDisclosure();
 
-  const currentUser = getCurrentUser();
+  const { user: currentUser } = useAuth();
   const appointmentModalRequestRef = useRef(0);
   const redirectToLogin = useUnauthorizedRedirect();
 
@@ -303,7 +303,7 @@ export default function DashboardPage() {
           clients={references.clients}
           defaultDate={new Date().toISOString().split("T")[0]}
           description="Crie um atendimento rápido direto do dashboard."
-          hours={["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"]}
+          hours={DEFAULT_TIME_SLOTS}
           onClose={newAppointmentModal.close}
           onSave={handleDashboardAppointmentSave}
           professionals={references.professionals}

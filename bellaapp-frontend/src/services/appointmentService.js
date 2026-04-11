@@ -2,9 +2,13 @@ import { apiGet, apiPost, apiPut } from "./api";
 import { listClients } from "./clientService";
 import { listProfessionals } from "./professionalService";
 import { listServices } from "./serviceService";
+import {
+  DEFAULT_TIME_SLOTS,
+  createOccupiedSlotKeySet,
+  getAppointmentEndHour,
+} from "../utils/timeUtils";
 
 const APPOINTMENTS_BASE_PATH = "/api/v1/appointments";
-const DEFAULT_HOURS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
 
 const API_TO_UI_STATUS = {
   SCHEDULED: "pendente",
@@ -125,6 +129,10 @@ function toAgendaAppointment(appointment, catalog) {
     status: mapApiStatusToUi(appointment.status),
     valorEstimado: Number(service?.price || 0),
     duracaoMin: Number(service?.durationMinutes || 0),
+    endHour: getAppointmentEndHour({
+      hour: formatHour(appointment.scheduledAt),
+      duracaoMin: Number(service?.durationMinutes || 0),
+    }),
     observacoes: appointment.notes || "",
     notes: appointment.notes || "",
   };
@@ -152,7 +160,7 @@ export async function getAgendaData(referenceDate = new Date()) {
   const appointments = await fetchAppointmentsByDates(dates);
 
   return {
-    hours: DEFAULT_HOURS,
+    hours: DEFAULT_TIME_SLOTS,
     appointments: appointments.map((appointment) => toAgendaAppointment(appointment, catalog)).sort(sortByScheduledAt),
     clients: catalog.clients,
     professionals: catalog.professionals,
@@ -229,6 +237,7 @@ export async function getDashboardData() {
   const pendentes = todayAppointments.filter((appointment) => appointment.status === "pendente").length;
   const cancelados = todayAppointments.filter((appointment) => appointment.status === "cancelado").length;
   const concluidos = todayAppointments.filter((appointment) => appointment.status === "concluido").length;
+  const busySlotCount = createOccupiedSlotKeySet(todayAppointments, DEFAULT_TIME_SLOTS).size;
   const faturamentoPrevisto = todayAppointments
     .filter((appointment) => appointment.status !== "cancelado")
     .reduce((total, appointment) => total + Number(appointment.valorEstimado || 0), 0);
@@ -278,7 +287,8 @@ export async function getDashboardData() {
       pendentes,
       cancelados,
       concluidos,
-      taxaOcupacao: Math.round((todayAppointments.length / DEFAULT_HOURS.length) * 100),
+      taxaOcupacao:
+        DEFAULT_TIME_SLOTS.length > 0 ? Math.round((busySlotCount / DEFAULT_TIME_SLOTS.length) * 100) : 0,
       faturamentoPrevisto,
       faturamentoRecebido,
       atualizadoEm: new Date().toISOString(),
@@ -298,6 +308,8 @@ export async function getDashboardData() {
       profissional: appointment.profissional,
       profissionalNome: appointment.profissional,
       status: appointment.status,
+      duracaoMin: appointment.duracaoMin,
+      endHour: appointment.endHour,
       notes: appointment.notes,
       observacoes: appointment.observacoes,
       valorEstimado: appointment.valorEstimado,

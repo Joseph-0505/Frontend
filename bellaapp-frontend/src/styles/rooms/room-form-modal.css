@@ -1,44 +1,20 @@
-.room-form-preview {
+.room-color-select-wrap {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-top: 20px;
-  padding: 16px 18px;
-  border-radius: 20px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(249, 243, 246, 0.96) 100%);
-  border: 1px solid var(--border-primary-hairline);
+  gap: 12px;
 }
 
-.room-form-preview-swatch {
-  --room-preview-color: #e8d8e2;
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  background: linear-gradient(135deg, var(--room-preview-color) 0%, rgba(255, 255, 255, 0.94) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+.room-color-select-swatch {
+  --room-select-color: #e8d8e2;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: linear-gradient(135deg, var(--room-select-color) 0%, rgba(255, 255, 255, 0.94) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
 }
 
-.room-form-preview-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.room-form-preview-copy strong {
-  color: var(--text-heading);
-  font-size: 1rem;
-}
-
-.room-form-preview-copy span {
-  color: var(--text-support);
-  font-size: 0.92rem;
-}
-
-@media (max-width: 720px) {
-  .room-form-preview {
-    align-items: flex-start;
-  }
+.room-color-select-wrap select {
+  flex: 1 1 auto;
 }

@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import FormModalShell from "./FormModalShell";
-import { DEFAULT_HOURS, API_STATUS_OPTIONS } from "../../utils/StatusUtils";
+import { API_STATUS_OPTIONS } from "../../utils/StatusUtils";
+import { DEFAULT_TIME_SLOTS, getSlotSpan, getSlotWindow } from "../../utils/timeUtils";
 
 function getTodayIsoDate() {
   return new Date().toISOString().split("T")[0];
@@ -22,7 +23,7 @@ export default function NovoAgendamento({
   clients = [],
   closeOnSave = true,
   defaultDate = "",
-  description = "Monte um agendamento rápido com cliente, serviço e janela operacional da agenda.",
+  description = "Monte um agendamento rapido com cliente, servico e janela operacional da agenda.",
   hours = [],
   initialValues = {},
   onClose,
@@ -32,9 +33,9 @@ export default function NovoAgendamento({
   submitLabel = "Salvar agendamento",
   title = "Novo Agendamento",
 }) {
-  const availableHours = hours.length > 0 ? hours : DEFAULT_HOURS;
+  const baseHours = hours.length > 0 ? hours : DEFAULT_TIME_SLOTS;
   const resolvedDate = initialValues.data || initialValues.day || defaultDate || getTodayIsoDate();
-  const resolvedHour = initialValues.hora || initialValues.hour || availableHours[0] || DEFAULT_HOURS[0];
+  const resolvedHour = initialValues.hora || initialValues.hour || baseHours[0] || DEFAULT_TIME_SLOTS[0];
   const resolvedProfessionalId =
     initialValues.professionalId || professionals.find((item) => item.name === initialValues.profissional)?.id || "";
 
@@ -63,6 +64,28 @@ export default function NovoAgendamento({
     () => services.find((service) => service.id === formData.serviceId) || null,
     [formData.serviceId, services]
   );
+
+  const availableHours = useMemo(() => {
+    const durationMinutes = Number(selectedService?.durationMinutes || 60) || 60;
+    const slotSpan = getSlotSpan(durationMinutes);
+
+    return baseHours.filter((hour) => getSlotWindow(baseHours, hour, slotSpan).length === slotSpan);
+  }, [baseHours, selectedService?.durationMinutes]);
+
+  useEffect(() => {
+    setFormData((current) => {
+      const nextHour = availableHours.includes(current.hora) ? current.hora : availableHours[0] || "";
+
+      if (nextHour === current.hora) {
+        return current;
+      }
+
+      return {
+        ...current,
+        hora: nextHour,
+      };
+    });
+  }, [availableHours]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -121,7 +144,7 @@ export default function NovoAgendamento({
           </div>
 
           <div className="form-modal-field">
-            <label htmlFor="novo-agendamento-servico">Serviço</label>
+            <label htmlFor="novo-agendamento-servico">Servico</label>
             <select
               id="novo-agendamento-servico"
               name="serviceId"
@@ -129,7 +152,7 @@ export default function NovoAgendamento({
               onChange={handleChange}
               required
             >
-              {renderOptions(services, "Nenhum serviço cadastrado")}
+              {renderOptions(services, "Nenhum servico cadastrado")}
             </select>
           </div>
 
@@ -165,13 +188,23 @@ export default function NovoAgendamento({
           </div>
 
           <div className="form-modal-field">
-            <label htmlFor="novo-agendamento-hora">Horário</label>
-            <select id="novo-agendamento-hora" name="hora" value={formData.hora} onChange={handleChange}>
-              {availableHours.map((hour) => (
-                <option key={hour} value={hour}>
-                  {hour}
-                </option>
-              ))}
+            <label htmlFor="novo-agendamento-hora">Horario</label>
+            <select
+              id="novo-agendamento-hora"
+              name="hora"
+              value={formData.hora}
+              onChange={handleChange}
+              disabled={availableHours.length === 0}
+            >
+              {availableHours.length > 0 ? (
+                availableHours.map((hour) => (
+                  <option key={hour} value={hour}>
+                    {hour}
+                  </option>
+                ))
+              ) : (
+                <option value="">Nenhum horario disponivel</option>
+              )}
             </select>
           </div>
 
@@ -187,13 +220,13 @@ export default function NovoAgendamento({
           </div>
 
           <div className="form-modal-field form-modal-field-full">
-            <label htmlFor="novo-agendamento-observacoes">Observações</label>
+            <label htmlFor="novo-agendamento-observacoes">Observacoes</label>
             <textarea
               id="novo-agendamento-observacoes"
               name="observacoes"
               value={formData.observacoes}
               onChange={handleChange}
-              placeholder="Ex: confirmar com 24h de antecedência ou levar ficha assinada."
+              placeholder="Ex: confirmar com 24h de antecedencia ou levar ficha assinada."
             />
           </div>
         </div>
@@ -208,7 +241,11 @@ export default function NovoAgendamento({
             Cancelar
           </button>
 
-          <button type="submit" className="form-modal-button form-modal-button-primary" disabled={submitting}>
+          <button
+            type="submit"
+            className="form-modal-button form-modal-button-primary"
+            disabled={submitting || !formData.hora}
+          >
             {submitting ? "Salvando..." : submitLabel}
           </button>
         </div>
