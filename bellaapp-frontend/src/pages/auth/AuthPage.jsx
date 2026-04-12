@@ -4,6 +4,7 @@ import { Navigate, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo2.png";
 import { isAuthenticated } from "../../services/api";
 import { loginAndStoreSession, register } from "../../services/authService";
+import { showSuccessAlert } from "../../utils/alerts";
 import { formatCnpj, formatCpf, normalizeEmail } from "../../utils/formatters";
 import {
   validateCnpj,
@@ -142,7 +143,8 @@ export default function AuthPage() {
     setSubmitting(true);
 
     try {
-      const emailError = validateEmail(formData.email);
+      const normalizedEmail = normalizeEmail(formData.email);
+      const emailError = validateEmail(normalizedEmail);
 
       if (emailError) {
         throw new Error(emailError);
@@ -161,16 +163,29 @@ export default function AuthPage() {
 
         await register({
           name: formData.name.trim(),
-          email: normalizeEmail(formData.email),
+          email: normalizedEmail,
           password: formData.password,
           cpf: formData.cpf.trim(),
           ...(formData.businessName.trim() ? { businessName: formData.businessName.trim() } : {}),
           ...(formData.cnpj.trim() ? { cnpj: formData.cnpj.trim() } : {}),
         });
+
+        await showSuccessAlert("Cadastro realizado com sucesso. Faça login para continuar.", {
+          title: "Conta criada",
+          confirmButtonText: "Ir para login",
+        });
+
+        switchMode("login");
+        setFormData({
+          ...INITIAL_FORM_DATA,
+          email: normalizedEmail,
+        });
+        navigate("/login", { replace: true });
+        return;
       }
 
       await loginAndStoreSession({
-        email: normalizeEmail(formData.email),
+        email: normalizedEmail,
         password: formData.password,
       });
 
