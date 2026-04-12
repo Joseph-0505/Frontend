@@ -5,6 +5,7 @@ import AgendaPage from "./pages/agenda/AgendaPage";
 import AuthPage from "./pages/auth/AuthPage";
 import ClientesPage from "./pages/clientes/ClientesPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import LandingPage from "./pages/landing/LandingPage";
 import ProfilePage from "./pages/perfil/ProfilePage";
 import RoomsPage from "./pages/rooms/RoomsPage";
 import ServicosPage from "./pages/servicos/ServicosPage";
@@ -52,6 +53,10 @@ function PublicOnlyRoute({ children }) {
   return children;
 }
 
+function LandingRoute() {
+  return <LandingPage />;
+}
+
 function OnboardingRoute() {
   const location = useLocation();
   const { bootstrapping, isAuthenticated, onboarding, onboardingLoading } = useAuth();
@@ -95,13 +100,14 @@ function RootRedirect() {
     return <AppLoadingScreen />;
   }
 
-  return <Navigate replace to={isAuthenticated ? resolveAuthenticatedRedirect(onboarding) : "/login"} />;
+  return <Navigate replace to={isAuthenticated ? resolveAuthenticatedRedirect(onboarding) : "/"} />;
 }
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingRoute />} />
         <Route
           path="/login"
           element={
@@ -123,7 +129,6 @@ function App() {
           <Route path="/perfil" element={<ProfilePage />} />
         </Route>
 
-        <Route path="/" element={<RootRedirect />} />
         <Route path="*" element={<RootRedirect />} />
       </Routes>
     </BrowserRouter>

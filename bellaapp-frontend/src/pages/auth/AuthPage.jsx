@@ -1,6 +1,6 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo2.png";
 import { isAuthenticated } from "../../services/api";
 import { loginAndStoreSession, register } from "../../services/authService";
@@ -24,6 +24,11 @@ const INITIAL_FORM_DATA = {
   name: "",
   password: "",
 };
+
+function resolveInitialAuthMode(search) {
+  const searchParams = new URLSearchParams(search);
+  return searchParams.get("mode") === "register" ? "register" : "login";
+}
 
 function PasswordField({
   fieldId,
@@ -102,7 +107,8 @@ function getRegisterValidationError(formData) {
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login");
+  const location = useLocation();
+  const [mode, setMode] = useState(() => resolveInitialAuthMode(location.search));
   const [formData, setFormData] = useState(INITIAL_FORM_DATA);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
