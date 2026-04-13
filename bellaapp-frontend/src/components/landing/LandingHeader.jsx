@@ -9,7 +9,6 @@ export default function LandingHeader({ actions, isAuthenticated }) {
         <Link className="landing-brand" to="/">
           <img src={logo} alt="Bella App" className="landing-brand-logo" />
           <div className="landing-brand-copy">
-            <strong>Bella App</strong>
             <span>Gestão elegante para clínicas e espaços de estética</span>
           </div>
         </Link>
