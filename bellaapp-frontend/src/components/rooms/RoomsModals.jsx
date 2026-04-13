@@ -16,7 +16,7 @@ export default function RoomsModals({
       {editingRoom ? (
         <RoomFormModal
           title="Editar Sala"
-          submitLabel="Salvar alteracoes"
+          submitLabel="Salvar alterações"
           initialValues={editingRoom}
           onClose={onCloseEditingRoom}
           onSave={onUpdateRoom}

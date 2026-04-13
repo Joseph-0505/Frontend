@@ -4,11 +4,16 @@ import StatusBadge from "./StatusBadge";
 import { getActionsByStatus } from "../../utils/appointmentActions";
 import "../../styles/dashboard/agenda-table.css";
 
-export default function AgendaTable({ appointments, onAction }) {
+export default function AgendaTable({
+  appointments,
+  emptyMessage = "Sem agendamentos para hoje.",
+  onAction,
+  title = "Agenda de hoje",
+}) {
   return (
     <article className="panel">
       <div className="panel-header">
-        <h2>Agenda de hoje</h2>
+        <h2>{title}</h2>
         <Link to="/agenda" className="panel-link">
           Ver agenda completa
         </Link>
@@ -20,17 +25,17 @@ export default function AgendaTable({ appointments, onAction }) {
             <tr>
               <th>Hora</th>
               <th>Cliente</th>
-              <th>Servico</th>
+              <th>Serviço</th>
               <th>Profissional</th>
               <th>Status</th>
-              <th className="th-actions">Acoes</th>
+              <th className="th-actions">Ações</th>
             </tr>
           </thead>
 
           <tbody>
             {appointments.length === 0 ? (
               <tr>
-                <td colSpan="6">Sem agendamentos para hoje.</td>
+                <td colSpan="6">{emptyMessage}</td>
               </tr>
             ) : (
               appointments.map((appointment) => (

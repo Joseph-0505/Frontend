@@ -1,7 +1,7 @@
 import ServicoRow from "./ServicoRow";
 import ServicosEmptyState from "./ServicosEmptyState";
 
-const SERVICE_TABLE_COLUMNS = ["Servico", "Preco", "Duracao", "Status", "Acoes"];
+const SERVICE_TABLE_COLUMNS = ["Serviço", "Preço", "Duração", "Status", "Ações"];
 
 export default function ServicosTable({ actions = [], onAction, services = [] }) {
   return (

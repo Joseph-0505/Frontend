@@ -17,6 +17,8 @@ export interface Appointment {
   id: ID;
   clientId: ID;
   professionalId: string;
+  roomId?: string;
+  sala?: string;
   serviceId: ID;
   scheduledAt?: string;
   day: string;

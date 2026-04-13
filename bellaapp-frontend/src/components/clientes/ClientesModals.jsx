@@ -64,6 +64,7 @@ export default function ClientesModals({
           onClose={onCloseAppointmentClient}
           onSave={onCreateAppointment}
           professionals={appointmentCatalog.professionals}
+          rooms={appointmentCatalog.rooms}
           services={appointmentCatalog.services}
           description={`Agende o próximo passo de ${appointmentClient.name} sem sair da tela de clientes.`}
         />

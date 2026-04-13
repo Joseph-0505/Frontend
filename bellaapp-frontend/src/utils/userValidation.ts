@@ -18,10 +18,10 @@ export function isValidEmail(value: ValidationInput): boolean {
 
 export function validateEmail(value: ValidationInput): string {
   if (!String(value || "").trim()) {
-    return "Email e obrigatorio.";
+    return "Email é obrigatório.";
   }
 
-  return isValidEmail(value) ? "" : "Email invalido.";
+  return isValidEmail(value) ? "" : "Email inválido.";
 }
 
 export function isValidCpf(value: ValidationInput): boolean {
@@ -62,10 +62,10 @@ export function isValidCpf(value: ValidationInput): boolean {
 
 export function validateCpf(value: ValidationInput): string {
   if (!String(value || "").trim()) {
-    return "CPF e obrigatorio.";
+    return "CPF é obrigatório.";
   }
 
-  return isValidCpf(value) ? "" : "CPF invalido.";
+  return isValidCpf(value) ? "" : "CPF inválido.";
 }
 
 export function isValidCnpj(value: ValidationInput): boolean {
@@ -101,34 +101,34 @@ export function validateCnpj(value: ValidationInput): string {
     return "";
   }
 
-  return isValidCnpj(value) ? "" : "CNPJ invalido.";
+  return isValidCnpj(value) ? "" : "CNPJ inválido.";
 }
 
 export function validatePassword(value: ValidationInput): string {
   const password = String(value || "");
 
   if (password.length < 8) {
-    return "A senha deve ter no minimo 8 caracteres.";
+    return "A senha deve ter no mínimo 8 caracteres.";
   }
 
   if (password.length > 72) {
-    return "A senha deve ter no maximo 72 caracteres.";
+    return "A senha deve ter no máximo 72 caracteres.";
   }
 
   if (!/[a-z]/.test(password)) {
-    return "A senha precisa ter pelo menos uma letra minuscula.";
+    return "A senha precisa ter pelo menos uma letra minúscula.";
   }
 
   if (!/[A-Z]/.test(password)) {
-    return "A senha precisa ter pelo menos uma letra maiuscula.";
+    return "A senha precisa ter pelo menos uma letra maiúscula.";
   }
 
   if (!/\d/.test(password)) {
-    return "A senha precisa ter pelo menos um numero.";
+    return "A senha precisa ter pelo menos um número.";
   }
 
   if (!/[^A-Za-z\d]/.test(password)) {
-    return "A senha precisa ter pelo menos um simbolo.";
+    return "A senha precisa ter pelo menos um símbolo.";
   }
 
   return "";
@@ -138,7 +138,7 @@ export function validatePasswordConfirmation(
   password: ValidationInput,
   confirmPassword: ValidationInput,
 ): string {
-  return String(password || "") === String(confirmPassword || "") ? "" : "As senhas nao coincidem.";
+  return String(password || "") === String(confirmPassword || "") ? "" : "As senhas não coincidem.";
 }
 
 export { EMAIL_REGEX };

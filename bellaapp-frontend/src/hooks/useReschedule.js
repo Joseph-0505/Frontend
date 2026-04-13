@@ -231,7 +231,7 @@ export default function useReschedule({
     }
 
     if (!selectedDay || !selectedHour) {
-      await showWarningAlert("Selecione um horario.");
+      await showWarningAlert("Selecione um horário.");
       return;
     }
 

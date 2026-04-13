@@ -34,7 +34,7 @@ export default function RoomsPagination({
             onClick={onNextPage}
             disabled={currentPage === totalPages}
           >
-            Proxima
+            Próxima
             <ChevronRight size={18} aria-hidden="true" />
           </button>
         </div>
@@ -43,7 +43,7 @@ export default function RoomsPagination({
           <select value={pageSize} onChange={(event) => onPageSizeChange(Number(event.target.value))}>
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
-                {size} / Pagina
+                {size} / Página
               </option>
             ))}
           </select>

@@ -24,14 +24,14 @@ export default function RoomRow({ actions = DEFAULT_ACTIONS, onAction, room }) {
         <RoomStatusBadge status={room.status} />
       </div>
 
-      <div className="room-col room-col-usage" data-label="Atendimentos/mes">
+      <div className="room-col room-col-usage" data-label="Atendimentos/mês">
         <span className="room-inline-meta">
           <BarChart3 size={18} aria-hidden="true" />
           <span>{room.monthlyAppointmentsLabel}</span>
         </span>
       </div>
 
-      <div className="room-col room-col-actions" data-label="Acoes">
+      <div className="room-col room-col-actions" data-label="Ações">
         <DropdownActions actions={resolvedActions} onAction={(action) => onAction?.(room, action)} />
       </div>
     </article>

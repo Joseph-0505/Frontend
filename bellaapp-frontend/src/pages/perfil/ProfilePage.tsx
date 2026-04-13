@@ -83,7 +83,7 @@ export default function ProfilePage() {
       const message =
         requestError instanceof Error
           ? requestError.message
-          : "Nao foi possivel atualizar seu perfil.";
+          : "Não foi possível atualizar seu perfil.";
 
       await showErrorAlert(message);
     } finally {
@@ -97,19 +97,19 @@ export default function ProfilePage() {
     <section className="profile-page">
       <Header
         title="Meu perfil"
-        subtitle="Edite seus dados com validacao de CPF, senha forte e confirmacao antes de salvar."
+        subtitle="Edite seus dados com validação de CPF, senha forte e confirmação antes de salvar."
       />
 
       <section className="profile-card">
         <div className="profile-card-header">
           <div>
             <h2>Dados da conta</h2>
-            <p>O email fica bloqueado para edicao. Para salvar, informe uma nova senha valida.</p>
+            <p>O email fica bloqueado para edição. Para salvar, informe uma nova senha válida.</p>
           </div>
         </div>
 
         {loading ? (
-          <p className="profile-feedback">Carregando dados do usuario...</p>
+          <p className="profile-feedback">Carregando dados do usuário...</p>
         ) : (
           <form className="profile-form" onSubmit={handleSubmit}>
             <div className="profile-grid">
@@ -153,13 +153,13 @@ export default function ProfilePage() {
               </div>
 
               <div className="profile-field">
-                <label htmlFor="profile-business-name">Nome do seu negocio</label>
+                <label htmlFor="profile-business-name">Nome do seu negócio</label>
                 <input
                   id="profile-business-name"
                   name="businessName"
                   value={formData.businessName}
                   onChange={handleChange}
-                  placeholder="Ex: Bella Estetica"
+                  placeholder="Ex: Bella Estética"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export default function ProfilePage() {
                   required
                 />
                 <small className="profile-helper">
-                  Minimo de 8 caracteres com letra maiuscula, minuscula, numero e simbolo.
+                  Mínimo de 8 caracteres com letra maiúscula, minúscula, número e símbolo.
                 </small>
               </div>
 
@@ -208,7 +208,7 @@ export default function ProfilePage() {
 
             <div className="profile-actions">
               <button type="submit" className="btn-primary" disabled={saving}>
-                {saving ? "Salvando..." : "Salvar alteracoes"}
+                {saving ? "Salvando..." : "Salvar alterações"}
               </button>
             </div>
           </form>

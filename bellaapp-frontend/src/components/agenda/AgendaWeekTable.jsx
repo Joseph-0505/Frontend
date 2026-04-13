@@ -25,8 +25,35 @@ function sortAppointmentsByStart(a, b) {
   return String(a?.hour || "").localeCompare(String(b?.hour || ""));
 }
 
+function getAppointmentVisualPriority(appointment) {
+  if (appointment?.status === "cancelado") {
+    return 2;
+  }
+
+  if (appointment?.status === "concluido") {
+    return 1;
+  }
+
+  return 0;
+}
+
+function sortAppointmentsByVisualPriority(a, b) {
+  const priorityCompare = getAppointmentVisualPriority(a.appointment) - getAppointmentVisualPriority(b.appointment);
+
+  if (priorityCompare !== 0) {
+    return priorityCompare;
+  }
+
+  return String(a.appointment?.cliente || "").localeCompare(String(b.appointment?.cliente || ""));
+}
+
+function isBlockingAppointmentStatus(status) {
+  return status === "pendente" || status === "confirmado";
+}
+
 function buildAppointmentOccupancyMap(appointments, hours) {
-  const occupancyMap = new Map();
+  const startSlotMap = new Map();
+  const continuationSlotKeys = new Set();
 
   [...appointments].sort(sortAppointmentsByStart).forEach((appointment) => {
     const slotTimes = getAppointmentSlotTimes(appointment, hours, AGENDA_SLOT_INTERVAL, {
@@ -38,23 +65,33 @@ function buildAppointmentOccupancyMap(appointments, hours) {
     }
 
     const slotSpan = slotTimes.length;
+    const startSlotKey = buildDayHourKey(appointment.day, slotTimes[0]);
+    const currentSlot = startSlotMap.get(startSlotKey);
+    const nextSlotItem = {
+      appointment,
+      slotSpan,
+    };
 
-    slotTimes.forEach((slotTime, index) => {
-      const slotKey = buildDayHourKey(appointment.day, slotTime);
-
-      if (occupancyMap.has(slotKey)) {
-        return;
-      }
-
-      occupancyMap.set(slotKey, {
-        appointment,
-        isStart: index === 0,
+    if (currentSlot) {
+      currentSlot.items.push(nextSlotItem);
+      currentSlot.items.sort(sortAppointmentsByVisualPriority);
+      currentSlot.slotSpan = Math.max(currentSlot.slotSpan, slotSpan);
+    } else {
+      startSlotMap.set(startSlotKey, {
+        items: [nextSlotItem],
         slotSpan,
       });
+    }
+
+    slotTimes.slice(1).forEach((slotTime) => {
+      continuationSlotKeys.add(buildDayHourKey(appointment.day, slotTime));
     });
   });
 
-  return occupancyMap;
+  return {
+    startSlotMap,
+    continuationSlotKeys,
+  };
 }
 
 function readDragPayload(event) {
@@ -116,15 +153,20 @@ export default function AgendaWeekTable({
     [allAppointments]
   );
 
+  const allBlockingAppointments = useMemo(
+    () => allAppointments.filter((appointment) => isBlockingAppointmentStatus(appointment.status)),
+    [allAppointments]
+  );
+
   const allOccupiedSlotKeys = useMemo(
-    () => createOccupiedSlotKeySet(allAppointments, hours),
-    [allAppointments, hours]
+    () => createOccupiedSlotKeySet(allBlockingAppointments, hours),
+    [allBlockingAppointments, hours]
   );
 
   const occupiedSlotKeysByAppointmentId = useMemo(() => {
     const appointmentKeys = new Map();
 
-    allAppointments.forEach((appointment) => {
+    allBlockingAppointments.forEach((appointment) => {
       appointmentKeys.set(
         appointment.id,
         new Set(getAppointmentSlotKeys(appointment, hours, AGENDA_SLOT_INTERVAL, { clip: true }))
@@ -132,7 +174,7 @@ export default function AgendaWeekTable({
     });
 
     return appointmentKeys;
-  }, [allAppointments, hours]);
+  }, [allBlockingAppointments, hours]);
 
   const suppressClick = useCallback(() => {
     clickSuppressionUntilRef.current = Date.now() + CLICK_SUPPRESSION_MS;
@@ -227,9 +269,7 @@ export default function AgendaWeekTable({
       const isValid = canPlaceAppointment(appointment, day, hour);
 
       setActiveDropState((current) =>
-        current.slotKey === slotKey && current.isValid === isValid
-          ? current
-          : { slotKey, isValid }
+        current.slotKey === slotKey && current.isValid === isValid ? current : { slotKey, isValid }
       );
 
       if (!isValid) {
@@ -319,33 +359,44 @@ export default function AgendaWeekTable({
 
               {days.map((day) => {
                 const slotKey = buildDayHourKey(day.key, hour);
-                const visibleSlotMeta = appointmentOccupancy.get(slotKey);
-                const allSlotMeta = allAppointmentOccupancy.get(slotKey);
+                const visibleSlotMeta = appointmentOccupancy.startSlotMap.get(slotKey);
+                const allSlotMeta = allAppointmentOccupancy.startSlotMap.get(slotKey);
+                const visibleAppointmentsAtSlot = visibleSlotMeta?.items || [];
 
-                if (visibleSlotMeta && !visibleSlotMeta.isStart) {
+                if (!visibleSlotMeta && appointmentOccupancy.continuationSlotKeys.has(slotKey)) {
                   return null;
                 }
 
-                if (!visibleSlotMeta && allSlotMeta && !allSlotMeta.isStart) {
+                if (
+                  !visibleSlotMeta &&
+                  !allSlotMeta &&
+                  allAppointmentOccupancy.continuationSlotKeys.has(slotKey)
+                ) {
                   return null;
                 }
 
-                const appointment = visibleSlotMeta?.isStart ? visibleSlotMeta.appointment : null;
-                const hiddenAppointment =
+                const appointment =
+                  visibleAppointmentsAtSlot.length === 1 ? visibleAppointmentsAtSlot[0].appointment : null;
+                const hiddenAppointmentGroup =
                   filtersActive &&
-                  !appointment &&
-                  allSlotMeta?.isStart &&
-                  !visibleAppointmentIds.has(allSlotMeta.appointment.id)
-                    ? allSlotMeta.appointment
+                  visibleAppointmentsAtSlot.length === 0 &&
+                  allSlotMeta?.items?.some((item) => !visibleAppointmentIds.has(item.appointment.id))
+                    ? allSlotMeta
                     : null;
-                const slotSpan = visibleSlotMeta?.slotSpan || (hiddenAppointment ? allSlotMeta.slotSpan : 1);
+                const slotSpan = visibleSlotMeta?.slotSpan || hiddenAppointmentGroup?.slotSpan || 1;
                 const isDropTarget =
                   hasActiveDrag && activeDropState.slotKey === slotKey && activeDropState.isValid;
                 const isDropInvalid =
                   hasActiveDrag && activeDropState.slotKey === slotKey && !activeDropState.isValid;
                 const cellClassName = `agenda-slot-cell${
-                  appointment ? " has-appointment" : hiddenAppointment ? " is-filtered" : " is-empty"
-                }${isDropTarget ? " is-drop-target" : ""}${isDropInvalid ? " is-drop-invalid" : ""}`;
+                  visibleAppointmentsAtSlot.length > 0
+                    ? " has-appointment"
+                    : hiddenAppointmentGroup
+                      ? " is-filtered"
+                      : " is-empty"
+                }${visibleAppointmentsAtSlot.length > 1 ? " has-appointment-stack" : ""}${
+                  isDropTarget ? " is-drop-target" : ""
+                }${isDropInvalid ? " is-drop-invalid" : ""}`;
 
                 return (
                   <td
@@ -356,7 +407,27 @@ export default function AgendaWeekTable({
                     onDragOver={(event) => handleSlotDragOver(event, day.key, hour)}
                     onDrop={(event) => handleSlotDrop(event, day.key, hour)}
                   >
-                    {appointment ? (
+                    {visibleAppointmentsAtSlot.length > 1 ? (
+                      <div className="agenda-slot-stack" style={{ "--slot-span": slotSpan }}>
+                        {visibleAppointmentsAtSlot.map((slotItem) => (
+                          <AgendaSlotCard
+                            key={slotItem.appointment.id}
+                            appointment={slotItem.appointment}
+                            draggable={!movingAppointmentId}
+                            isDragging={draggedAppointmentId === slotItem.appointment.id}
+                            isDropSettled={
+                              settledDrop.appointmentId === slotItem.appointment.id &&
+                              settledDrop.slotKey === slotKey
+                            }
+                            onClick={() => handleAppointmentSelect(slotItem.appointment)}
+                            onDragEnd={handleCardDragEnd}
+                            onDragStart={(event) => handleCardDragStart(event, slotItem.appointment)}
+                            slotSpan={1}
+                            stacked
+                          />
+                        ))}
+                      </div>
+                    ) : appointment ? (
                       <AgendaSlotCard
                         appointment={appointment}
                         draggable={!movingAppointmentId}
@@ -369,7 +440,7 @@ export default function AgendaWeekTable({
                         onDragStart={(event) => handleCardDragStart(event, appointment)}
                         slotSpan={slotSpan}
                       />
-                    ) : hiddenAppointment ? (
+                    ) : hiddenAppointmentGroup ? (
                       <div className="agenda-slot-filtered" aria-hidden="true" style={{ "--slot-span": slotSpan }}>
                         Oculto pelo filtro
                       </div>

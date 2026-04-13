@@ -1,13 +1,10 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import useDisclosure from "./useDisclosure";
 import useUnauthorizedRedirect from "./useUnauthorizedRedirect";
-import { createAppointment } from "../services/appointmentService";
+import { createAppointment, getAppointmentReferences } from "../services/appointmentService";
 import { createClient, deleteClient, listClients, updateClient } from "../services/clientService";
-import { listProfessionals } from "../services/professionalService";
-import { listServices } from "../services/serviceService";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30];
-const APPOINTMENT_CATALOG_LIMIT = 100;
 const CLIENT_ROW_ACTIONS = ["Visualizar", "Editar", "Excluir"];
 
 function buildEmptyMeta(page, limit) {
@@ -31,6 +28,7 @@ export default function useClientesPage() {
   const [appointmentCatalog, setAppointmentCatalog] = useState({
     loaded: false,
     professionals: [],
+    rooms: [],
     services: [],
   });
   const [appointmentCatalogLoading, setAppointmentCatalogLoading] = useState(false);
@@ -110,41 +108,31 @@ export default function useClientesPage() {
     try {
       setAppointmentCatalogLoading(true);
 
-      const [servicesResponse, professionalsResponse] = await Promise.all([
-        listServices({
-          active: true,
-          page: 1,
-          limit: APPOINTMENT_CATALOG_LIMIT,
-        }),
-        listProfessionals({
-          page: 1,
-          limit: APPOINTMENT_CATALOG_LIMIT,
-          status: "ativo",
-        }),
-      ]);
-
-      const services = servicesResponse.items
-        .filter((service) => service.active)
-        .map((service) => ({
-          id: service.id,
-          name: service.name,
-        }));
+      const references = await getAppointmentReferences();
+      const services = references.services.map((service) => ({
+        id: service.id,
+        name: service.name,
+      }));
 
       if (services.length === 0) {
         alert("Cadastre ao menos um serviço ativo antes de agendar.");
         return false;
       }
 
-      const professionals = professionalsResponse.items
-        .filter((professional) => professional.status === "ativo")
-        .map((professional) => ({
-          id: professional.id,
-          name: professional.name,
-        }));
+      const professionals = references.professionals.map((professional) => ({
+        id: professional.id,
+        name: professional.name,
+      }));
+
+      const rooms = references.rooms.map((room) => ({
+        id: room.id,
+        name: room.name,
+      }));
 
       setAppointmentCatalog({
         loaded: true,
         professionals,
+        rooms,
         services,
       });
 

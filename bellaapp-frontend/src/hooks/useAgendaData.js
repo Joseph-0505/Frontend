@@ -12,7 +12,7 @@ function replaceAppointment(currentAppointments, appointmentId, nextAppointment)
   );
 }
 
-function buildOptimisticAppointment(currentAppointment, changes, professionals) {
+function buildOptimisticAppointment(currentAppointment, changes, professionals, rooms) {
   if (!currentAppointment || typeof changes === "string") {
     return {
       ...currentAppointment,
@@ -31,10 +31,17 @@ function buildOptimisticAppointment(currentAppointment, changes, professionals) 
   const nextProfessionalId = Object.prototype.hasOwnProperty.call(changes, "professionalId")
     ? changes.professionalId || ""
     : currentAppointment.professionalId || "";
+  const nextRoomId = Object.prototype.hasOwnProperty.call(changes, "roomId")
+    ? changes.roomId || ""
+    : currentAppointment.roomId || "";
   const nextProfessional =
     nextProfessionalId === currentAppointment.professionalId
       ? currentAppointment.profissional
       : professionals.find((professional) => professional.id === nextProfessionalId)?.name || "";
+  const nextRoomName =
+    nextRoomId === currentAppointment.roomId
+      ? currentAppointment.sala || ""
+      : rooms.find((room) => room.id === nextRoomId)?.name || "";
   const durationMinutes = getAppointmentDurationMinutes(currentAppointment);
 
   return {
@@ -46,7 +53,9 @@ function buildOptimisticAppointment(currentAppointment, changes, professionals) 
     notes: nextNotes,
     observacoes: nextNotes,
     professionalId: nextProfessionalId,
+    roomId: nextRoomId,
     profissional: nextProfessional,
+    sala: nextRoomName,
   };
 }
 
@@ -58,6 +67,7 @@ export default function useAgendaData(currentDate) {
   const [appointments, setAppointments] = useState([]);
   const [clients, setClients] = useState([]);
   const [professionals, setProfessionals] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [services, setServices] = useState([]);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -77,6 +87,7 @@ export default function useAgendaData(currentDate) {
         setAppointments(data?.appointments || []);
         setClients(data?.clients || []);
         setProfessionals(data?.professionals || []);
+        setRooms(data?.rooms || []);
         setServices(data?.services || []);
       } catch (err) {
         if (!active) return;
@@ -85,6 +96,7 @@ export default function useAgendaData(currentDate) {
         setAppointments([]);
         setClients([]);
         setProfessionals([]);
+        setRooms([]);
         setServices([]);
         setError(err.message || "Falha ao carregar a agenda.");
         setErrorStatus(err.status || 0);
@@ -114,7 +126,7 @@ export default function useAgendaData(currentDate) {
       return false;
     }
 
-    const optimisticAppointment = buildOptimisticAppointment(currentAppointment, changes, professionals);
+    const optimisticAppointment = buildOptimisticAppointment(currentAppointment, changes, professionals, rooms);
     setAppointments((current) => replaceAppointment(current, id, optimisticAppointment));
 
     try {
@@ -131,7 +143,7 @@ export default function useAgendaData(currentDate) {
       setAppointments((current) => replaceAppointment(current, id, currentAppointment));
       throw error;
     }
-  }, [appointments, professionals]);
+  }, [appointments, professionals, rooms]);
 
   function refreshAgendaData() {
     setReloadKey((current) => current + 1);
@@ -145,6 +157,7 @@ export default function useAgendaData(currentDate) {
     loading,
     normalizedAppointments: appointments,
     professionals,
+    rooms,
     services,
     createAppointment,
     refreshAgendaData,

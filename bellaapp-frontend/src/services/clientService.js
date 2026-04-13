@@ -53,7 +53,7 @@ function toClientViewModel(client) {
     notes: client.notes || "",
     hasLatestVisit,
     latestVisit: latestVisit || client.latestVisit || "Sem atendimentos",
-    latestVisitNote: client.latestVisitNote || "Atendimento concluido",
+    latestVisitNote: client.latestVisitNote || "Atendimento concluído",
     latestVisitEmptyLabel: "Registrar primeiro atendimento",
     hasNextAppointment,
     nextAppointment: nextAppointment || client.nextAppointment || "Sem agendamento",

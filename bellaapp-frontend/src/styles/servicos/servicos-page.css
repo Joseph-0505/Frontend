@@ -2,7 +2,6 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
-  padding: 20px 6px 32px;
 }
 
 .services-content-grid {
@@ -16,7 +15,11 @@
   overflow: hidden;
   border: 1px solid var(--border-primary);
   border-radius: 26px;
-  background: linear-gradient(180deg, var(--surface-panel) 0%, rgba(255, 248, 250, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--surface-panel) 0%,
+    rgba(255, 248, 250, 0.98) 100%
+  );
   box-shadow: var(--shadow-card-soft);
 }
 

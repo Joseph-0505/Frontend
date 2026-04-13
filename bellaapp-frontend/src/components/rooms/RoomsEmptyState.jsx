@@ -11,8 +11,8 @@ export default function RoomsEmptyState({ isEmptyDatabase = false, onCreateRoom 
 
       <span>
         {isEmptyDatabase
-          ? "Cadastre a primeira sala para organizar os ambientes disponiveis para atendimento."
-          : "Ajuste a busca ou o filtro para exibir resultados nesta pagina."}
+          ? "Cadastre a primeira sala para organizar os ambientes disponíveis para atendimento."
+          : "Ajuste a busca ou o filtro para exibir resultados nesta página."}
       </span>
 
       <button type="button" className="btn-soft" onClick={onCreateRoom}>

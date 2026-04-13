@@ -210,7 +210,7 @@ export default function OnboardingPage() {
           <div className="onboarding-brand-copy">
             <h2>Vamos deixar sua agenda pronta em menos de um minuto.</h2>
             <p>
-              Oi, {displayName}. Responda o essencial agora e a Bella App ja cria a base minima para você
+              Oi, {displayName}. Responda o essencial agora e a Bella App já cria a base mínima para você
               começar a atender sem telas vazias.
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function OnboardingPage() {
             <h3>O que será preparado ao finalizar</h3>
             <ul>
               <li>1 profissional inicial com base na sua conta</li>
-              <li>Seus serviços ja cadastrados para agendamento</li>
+              <li>Seus serviços já cadastrados para agendamento</li>
               <li>
                 {usesRooms === true
                   ? "Salas iniciais: Sala 1 e Sala 2"

@@ -5,9 +5,8 @@ import logo from "../../assets/logo2.png";
 import { isAuthenticated } from "../../services/api";
 import { loginAndStoreSession, register } from "../../services/authService";
 import { showSuccessAlert } from "../../utils/alerts";
-import { formatCnpj, formatCpf, normalizeEmail } from "../../utils/formatters";
+import { formatCpf, normalizeEmail } from "../../utils/formatters";
 import {
-  validateCnpj,
   validateCpf,
   validateEmail,
   validatePassword,
@@ -16,8 +15,6 @@ import {
 import "../../styles/auth.css";
 
 const INITIAL_FORM_DATA = {
-  businessName: "",
-  cnpj: "",
   confirmPassword: "",
   cpf: "",
   email: "",
@@ -75,7 +72,7 @@ function PasswordField({
 
 function getRegisterValidationError(formData) {
   if (!formData.name.trim()) {
-    return "Nome e obrigatorio.";
+    return "Nome é obrigatório.";
   }
 
   const cpfError = validateCpf(formData.cpf);
@@ -91,15 +88,6 @@ function getRegisterValidationError(formData) {
   const confirmationError = validatePasswordConfirmation(formData.password, formData.confirmPassword);
   if (confirmationError) {
     return confirmationError;
-  }
-
-  const cnpjError = validateCnpj(formData.cnpj);
-  if (cnpjError) {
-    return cnpjError;
-  }
-
-  if (formData.cnpj.trim() && !formData.businessName.trim()) {
-    return "Informe o nome do negocio ao preencher o CNPJ.";
   }
 
   return "";
@@ -130,9 +118,7 @@ export default function AuthPage() {
           ? normalizeEmail(value)
           : name === "cpf"
             ? formatCpf(value)
-            : name === "cnpj"
-              ? formatCnpj(value)
-              : value,
+            : value,
     }));
   }
 
@@ -157,7 +143,7 @@ export default function AuthPage() {
       }
 
       if (!formData.password) {
-        throw new Error("Senha e obrigatoria.");
+        throw new Error("Senha é obrigatória.");
       }
 
       if (isRegisterMode) {
@@ -172,8 +158,6 @@ export default function AuthPage() {
           email: normalizedEmail,
           password: formData.password,
           cpf: formData.cpf.trim(),
-          ...(formData.businessName.trim() ? { businessName: formData.businessName.trim() } : {}),
-          ...(formData.cnpj.trim() ? { cnpj: formData.cnpj.trim() } : {}),
         });
 
         await showSuccessAlert("Cadastro realizado com sucesso. Faça login para continuar.", {
@@ -197,7 +181,7 @@ export default function AuthPage() {
 
       navigate("/", { replace: true });
     } catch (requestError) {
-      setError(requestError.message || "Nao foi possivel autenticar.");
+      setError(requestError.message || "Não foi possível autenticar.");
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +192,7 @@ export default function AuthPage() {
       <section className="auth-left">
         <div className={`auth-brand auth-brand-surface ${isRegisterMode ? "auth-brand-compact" : ""}`}>
           <div className="auth-brand-header">
-            <span className="auth-chip">Gestao para estetica</span>
+            <span className="auth-chip">Gestão para estética</span>
           </div>
 
           <div className="auth-brand-media">
@@ -218,7 +202,7 @@ export default function AuthPage() {
           <div className="auth-brand-copy">
             <h1 className="auth-titulo">Bem-vinda</h1>
             <p className="auth-subtitle">
-              Organize seus atendimentos, clientes e servicos em um fluxo mais simples e profissional.
+              Organize seus atendimentos, clientes e serviços em um fluxo mais simples e profissional.
             </p>
           </div>
         </div>
@@ -226,7 +210,7 @@ export default function AuthPage() {
 
       <section className="auth-right">
         <div className={`auth-card ${isRegisterMode ? "auth-card-register" : ""}`}>
-          <div className="auth-mode-toggle" role="tablist" aria-label="Modo de autenticacao">
+          <div className="auth-mode-toggle" role="tablist" aria-label="Modo de autenticação">
             <button
               type="button"
               className={mode === "login" ? "active" : ""}
@@ -248,7 +232,7 @@ export default function AuthPage() {
             <h2>{isRegisterMode ? "Crie sua conta" : "Acesse sua conta"}</h2>
             <p>
               {isRegisterMode
-                ? "Preencha os dados principais da conta em um unico formulario."
+                ? "Preencha os dados principais da conta em um único formulário."
                 : "Entre com email e senha para acessar sua agenda."}
             </p>
           </div>
@@ -283,30 +267,6 @@ export default function AuthPage() {
                     required
                   />
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="auth-business-name">Nome do negocio</label>
-                  <input
-                    id="auth-business-name"
-                    name="businessName"
-                    placeholder="Ex: Bella Estetica"
-                    value={formData.businessName}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="auth-cnpj">CNPJ</label>
-                  <input
-                    id="auth-cnpj"
-                    name="cnpj"
-                    placeholder="00.000.000/0000-00"
-                    value={formData.cnpj}
-                    onChange={handleChange}
-                    inputMode="numeric"
-                    maxLength={18}
-                  />
-                </div>
               </>
             ) : null}
 
@@ -331,7 +291,7 @@ export default function AuthPage() {
               fieldId="auth-password"
               fieldName="password"
               helperText={
-                isRegisterMode ? "Minimo de 8 caracteres com letra maiuscula, minuscula, numero e simbolo." : ""
+                isRegisterMode ? "Mínimo de 8 caracteres com letra maiúscula, minúscula, número e símbolo." : ""
               }
               label="Senha"
               onToggleVisibility={() => setShowPassword((current) => !current)}
@@ -351,7 +311,7 @@ export default function AuthPage() {
                 onValueChange={handleChange}
                 placeholder="Confirme sua senha"
                 showPassword={showConfirmPassword}
-                toggleLabel={showConfirmPassword ? "Ocultar confirmacao de senha" : "Mostrar confirmacao de senha"}
+                toggleLabel={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
                 value={formData.confirmPassword}
               />
             ) : null}

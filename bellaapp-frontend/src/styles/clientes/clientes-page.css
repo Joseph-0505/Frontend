@@ -2,14 +2,17 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
-  padding: 20px 6px 32px;
 }
 
 .clientes-board {
   overflow: hidden;
   border-radius: 26px;
   border: 1px solid var(--border-primary);
-  background: linear-gradient(180deg, var(--surface-card-strong) 0%, rgba(255, 250, 252, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--surface-card-strong) 0%,
+    rgba(255, 250, 252, 0.98) 100%
+  );
   box-shadow: var(--shadow-card-soft);
 }
 

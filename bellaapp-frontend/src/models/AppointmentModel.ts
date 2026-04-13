@@ -4,7 +4,7 @@ import type { Appointment, AppointmentStatus } from "../types/entities";
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   pendente: "Pendente",
   confirmado: "Confirmado",
-  concluido: "Concluido",
+  concluido: "Concluído",
   cancelado: "Cancelado",
 };
 
@@ -20,7 +20,11 @@ export default class AppointmentModel {
   }
 
   get professionalName(): string {
-    return this.appointment.profissional || "Nao vinculado";
+    return this.appointment.profissional || "Não vinculado";
+  }
+
+  get roomName(): string {
+    return this.appointment.sala || "Sem sala definida";
   }
 
   get formattedDate(): string {
@@ -42,7 +46,7 @@ export default class AppointmentModel {
   }
 
   get notesLabel(): string {
-    return this.appointment.observacoes || "Sem observacoes registradas.";
+    return this.appointment.observacoes || "Sem observações registradas.";
   }
 
   get estimatedValueLabel(): string {

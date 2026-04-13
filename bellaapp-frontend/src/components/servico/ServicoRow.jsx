@@ -40,7 +40,7 @@ export default function ServicoRow({ actions = DEFAULT_ACTIONS, onAction, servic
 
         <div className="service-main-copy">
           <strong>{service.name}</strong>
-          <span>{service.description || "Sem descricao cadastrada."}</span>
+          <span>{service.description || "Sem descrição cadastrada."}</span>
         </div>
       </div>
 

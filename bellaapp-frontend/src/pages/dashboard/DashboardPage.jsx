@@ -6,6 +6,7 @@ import TopServicesList from "../../components/dashboard/TopServicesList";
 import useAuth from "../../hooks/useAuth";
 import useDisclosure from "../../hooks/useDisclosure";
 import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
+import { toIsoLocal } from "../../hooks/useAgendaWeekNavigation";
 import NovoAgendamento from "../../components/modals/NovoAgendamento";
 import NovoCliente from "../../components/modals/NovoCliente";
 import ReagendamentoModal from "../../components/modals/ReagendamentoModal";
@@ -22,6 +23,16 @@ import "../../styles/dashboard/dashboard.css";
 
 const REFRESH_MS = 30000;
 
+function formatDashboardDate(date) {
+  return new Intl.DateTimeFormat("pt-BR").format(new Date(`${date}T12:00:00`));
+}
+
+function shiftIsoDate(date, days) {
+  const nextDate = new Date(`${date}T12:00:00`);
+  nextDate.setDate(nextDate.getDate() + days);
+  return toIsoLocal(nextDate);
+}
+
 function AlertList({ alertas }) {
   return (
     <article className="panel">
@@ -36,13 +47,7 @@ function AlertList({ alertas }) {
   );
 }
 
-function DashboardLoading() {
-  return (
-    <section className="dashboard-page">
-      <p>Carregando dashboard...</p>
-    </section>
-  );
-}
+
 
 function DashboardError({ message, onRetry }) {
   return (
@@ -62,8 +67,9 @@ export default function DashboardPage() {
   const [agendaHoje, setAgendaHoje] = useState([]);
   const [alertas, setAlertas] = useState([]);
   const [topServicos, setTopServicos] = useState([]);
-  const [references, setReferences] = useState({ clients: [], professionals: [], services: [] });
+  const [references, setReferences] = useState({ clients: [], professionals: [], rooms: [], services: [] });
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(() => toIsoLocal(new Date()));
   const [rescheduleAppointments, setRescheduleAppointments] = useState([]);
   const [rescheduleHours, setRescheduleHours] = useState([]);
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
@@ -77,7 +83,7 @@ export default function DashboardPage() {
   const kpis = useMemo(() => {
     return [
       {
-        label: "Agendamentos hoje",
+        label: "Agendamentos do dia",
         value: resumo.agendamentosHoje || 0,
         trend: "Volume do dia",
       },
@@ -99,15 +105,23 @@ export default function DashboardPage() {
     ];
   }, [resumo]);
 
+  const isTodaySelected = selectedDate === toIsoLocal(new Date());
+  const selectedDateLabel = useMemo(() => formatDashboardDate(selectedDate), [selectedDate]);
+  const agendaTitle = isTodaySelected ? "Agenda de hoje" : `Agenda de ${selectedDateLabel}`;
+  const emptyAgendaMessage = isTodaySelected
+    ? "Sem agendamentos para hoje."
+    : `Sem agendamentos para ${selectedDateLabel}.`;
+
   const loadDashboard = useCallback(async () => {
     try {
+      setLoading(true);
       setError("");
-      const data = await getDashboardData();
+      const data = await getDashboardData(selectedDate);
       setResumo(data.resumo);
       setAgendaHoje(data.agendaHoje);
       setAlertas(data.alertas);
       setTopServicos(data.topServicos);
-      setReferences(data.references || { clients: [], professionals: [], services: [] });
+      setReferences(data.references || { clients: [], professionals: [], rooms: [], services: [] });
     } catch (err) {
       if (err.status === 401) {
         redirectToLogin();
@@ -118,7 +132,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [redirectToLogin]);
+  }, [redirectToLogin, selectedDate]);
 
   useEffect(() => {
     loadDashboard();
@@ -128,6 +142,30 @@ export default function DashboardPage() {
     const id = setInterval(loadDashboard, REFRESH_MS);
     return () => clearInterval(id);
   }, [loadDashboard]);
+
+  useEffect(() => {
+    closeReagendamentoModal();
+  }, [selectedDate]);
+
+  function handleSelectedDateChange(nextDate) {
+    if (!nextDate) {
+      return;
+    }
+
+    setSelectedDate(nextDate);
+  }
+
+  function goToToday() {
+    setSelectedDate(toIsoLocal(new Date()));
+  }
+
+  function goToPrevDay() {
+    setSelectedDate((current) => shiftIsoDate(current, -1));
+  }
+
+  function goToNextDay() {
+    setSelectedDate((current) => shiftIsoDate(current, 1));
+  }
 
   function closeReagendamentoModal() {
     appointmentModalRequestRef.current += 1;
@@ -253,16 +291,21 @@ export default function DashboardPage() {
     return true;
   }
 
-  if (loading) return <DashboardLoading />;
+
   if (error) return <DashboardError message={error} onRetry={loadDashboard} />;
 
   return (
     <section className="dashboard-page">
       <DashboardHeader
         faturamentoPrevisto={resumo.faturamentoPrevisto || 0}
-        nomeClinica={currentUser?.businessProfile?.businessName || currentUser?.name || "Painel da Clinica"}
+        nomeClinica={currentUser?.businessProfile?.businessName || currentUser?.name || "Painel da Clínica"}
+        onDateChange={handleSelectedDateChange}
+        onGoToday={goToToday}
         onNewAppointment={newAppointmentModal.open}
         onNewClient={newClientModal.open}
+        onNextDay={goToNextDay}
+        onPrevDay={goToPrevDay}
+        selectedDate={selectedDate}
         totalAtendimentos={resumo.agendamentosHoje || 0}
       />
 
@@ -279,7 +322,7 @@ export default function DashboardPage() {
       /> */}
 
       <section className="dash-main-grid">
-        <AgendaTable appointments={agendaHoje} onAction={handleAgendaAction} />
+        <AgendaTable appointments={agendaHoje} emptyMessage={emptyAgendaMessage} onAction={handleAgendaAction} title={agendaTitle} />
         <aside className="side-stack">
           <AlertList alertas={alertas} />
           <TopServicesList topServicos={topServicos} />
@@ -301,12 +344,13 @@ export default function DashboardPage() {
       {newAppointmentModal.isOpen ? (
         <NovoAgendamento
           clients={references.clients}
-          defaultDate={new Date().toISOString().split("T")[0]}
+          defaultDate={selectedDate}
           description="Crie um atendimento rápido direto do dashboard."
           hours={DEFAULT_TIME_SLOTS}
           onClose={newAppointmentModal.close}
           onSave={handleDashboardAppointmentSave}
           professionals={references.professionals}
+          rooms={references.rooms}
           services={references.services}
           title="Agendar no Dashboard"
         />

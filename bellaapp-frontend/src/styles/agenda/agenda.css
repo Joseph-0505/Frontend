@@ -159,9 +159,30 @@
 }
 
 .agenda-slot-card[data-status="cancelado"] {
-  --slot-accent: var(--danger);
-  --slot-chip-bg: rgba(157, 29, 63, 0.12);
-  --slot-chip-color: var(--danger);
+  --slot-accent: #94a3b8;
+  --slot-chip-bg: rgba(148, 163, 184, 0.16);
+  --slot-chip-color: #64748b;
+  --slot-surface: rgba(226, 232, 240, 0.64);
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: none;
+}
+
+.agenda-slot-card[data-status="cancelado"] .agenda-slot-title,
+.agenda-slot-card[data-status="cancelado"] .agenda-slot-service {
+  color: var(--text-muted-alt);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.agenda-slot-card[data-status="cancelado"] .agenda-slot-secondary,
+.agenda-slot-card[data-status="cancelado"] .agenda-slot-time,
+.agenda-slot-card[data-status="cancelado"] .agenda-slot-value {
+  color: var(--text-muted-alt);
+}
+
+.agenda-slot-card[data-status="cancelado"] .agenda-slot-value {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(248, 250, 252, 0.92);
 }
 
 .agenda-slot-card:hover {
@@ -179,6 +200,10 @@
 
 .agenda-slot-card.is-drop-settled {
   animation: agendaSlotDropSettled 0.36s ease;
+}
+
+.agenda-slot-card.is-stacked {
+  min-height: 0;
 }
 
 .agenda-slot-card:focus-visible {
@@ -264,6 +289,14 @@
   color: var(--text-heading);
   font-size: 0.72rem;
   font-weight: 700;
+}
+
+.agenda-slot-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-height: calc(var(--agenda-slot-unit-height) * var(--slot-span, 1));
 }
 
 /* Empty slots use a soft hover affordance instead of a persistent badge. */

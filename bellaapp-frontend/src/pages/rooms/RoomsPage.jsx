@@ -37,7 +37,7 @@ export default function RoomsPage() {
     <section className="rooms-page">
       <Header
         title="Salas"
-        subtitle="Gerencie as salas disponiveis para atendimento"
+        subtitle="Gerencie as salas disponíveis para atendimento"
         actions={
           <button type="button" className="btn-primary" onClick={newRoomModal.open}>
             + Nova Sala

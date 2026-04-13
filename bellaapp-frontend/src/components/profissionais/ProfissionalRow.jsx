@@ -42,7 +42,7 @@ export default function ProfissionalRow({ actions = DEFAULT_ACTIONS, onAction, p
         <ProfissionalStatusBadge status={professional.status} />
       </div>
 
-      <div className="profissional-col profissional-col-actions" data-label="Acoes">
+      <div className="profissional-col profissional-col-actions" data-label="Ações">
         <DropdownActions actions={resolvedActions} onAction={(action) => onAction?.(professional, action)} />
       </div>
     </article>

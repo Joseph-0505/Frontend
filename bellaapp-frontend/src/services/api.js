@@ -112,9 +112,12 @@ function extractErrorPayload(body) {
         .map((detail) => (detail && typeof detail === "object" ? detail.message : ""))
         .filter(Boolean)
     : [];
-  const fallbackMessage = detailMessages.length > 0 ? detailMessages.join(" ") : "Erro na requisicao.";
+  const fallbackMessage = detailMessages.length > 0 ? detailMessages.join(" ") : "Erro na requisição.";
   const rawMessage = apiError?.message || body.message || fallbackMessage;
-  const message = rawMessage === "Dados invalidos." && detailMessages.length > 0 ? detailMessages.join(" ") : rawMessage;
+  const message =
+    ["Dados invalidos.", "Dados inválidos."].includes(rawMessage) && detailMessages.length > 0
+      ? detailMessages.join(" ")
+      : rawMessage;
 
   return {
     code: apiError?.code || body.code || "API_ERROR",
@@ -143,7 +146,7 @@ async function request(path, options = {}) {
       ...rest,
     });
   } catch (networkError) {
-    throw new ApiError("Nao foi possivel conectar ao servidor.", {
+    throw new ApiError("Não foi possível conectar ao servidor.", {
       code: "NETWORK_ERROR",
       details: networkError,
       status: 0,

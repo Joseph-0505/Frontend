@@ -6,23 +6,23 @@ export const API_STATUS_OPTIONS = [
   { value: "todos", label: "Todos status" },
   { value: "pendente", label: "Pendente" },
   { value: "confirmado", label: "Confirmado" },
-  { value: "concluido", label: "Concluido" },
+  { value: "concluido", label: "Concluído" },
   { value: "cancelado", label: "Cancelado" },
 ];
 
 export function riskLabel(risk) {
   if (risk === "todos" || risk === "Todos") return "Todos";
   if (risk === "alto") return "Risco alto";
-  if (risk === "medio") return "Risco medio";
+  if (risk === "medio") return "Risco médio";
   if (risk === "baixo") return "Risco baixo";
 
-  return "Nao informado";
+  return "Não informado";
 }
 
 export const SERVICE_RISK_OPTIONS = [
   { value: "todos", label: "Todos os riscos" },
   { value: "baixo", label: "Baixo" },
-  { value: "medio", label: "Medio" },
+  { value: "medio", label: "Médio" },
   { value: "alto", label: "Alto" },
 ];
 
@@ -36,6 +36,7 @@ export function statusColor(status) {
   if (status === "confirmado") return "#dff3e7";
   if (status === "pendente") return "#f8ecd6";
   if (status === "concluido") return "#dfe9f8";
+  if (status === "cancelado") return "#e2e8f0";
   return "#f3f3f3";
 }
 
@@ -48,7 +49,7 @@ export const CLIENT_STATUS_OPTIONS = [
 export function statusLabel(status) {
   if (status === "confirmado") return "Confirmado";
   if (status === "pendente") return "Pendente";
-  if (status === "concluido") return "Concluido";
+  if (status === "concluido") return "Concluído";
   if (status === "cancelado") return "Cancelado";
   if (status === "todos") return "Todos";
   if (status === "ativo") return "Ativo";

@@ -87,7 +87,7 @@ export default class ProfileFormModel {
 
   validate(): string {
     if (!this.formData.name.trim()) {
-      return "Nome e obrigatorio.";
+      return "Nome é obrigatório.";
     }
 
     const cpfError = validateCpf(this.formData.cpf);
@@ -101,7 +101,7 @@ export default class ProfileFormModel {
     }
 
     if (this.formData.cnpj.trim() && !this.formData.businessName.trim()) {
-      return "Informe o nome do negocio ao preencher o CNPJ.";
+      return "Informe o nome do negócio ao preencher o CNPJ.";
     }
 
     const passwordError = validatePassword(this.formData.password);

@@ -114,7 +114,7 @@ export default function useServicosPage() {
 
         setServices([]);
         setMeta(buildEmptyMeta(page, pageSize));
-        setError(requestError.message || "Falha ao carregar servicos.");
+        setError(requestError.message || "Falha ao carregar serviços.");
 
         if (requestError.status === 401) {
           redirectToLogin();
@@ -136,7 +136,7 @@ export default function useServicosPage() {
   const visibleServices = services;
   const totalPages = Math.max(meta.totalPages || 0, 1);
   const currentPage = Math.min(meta.page || page, totalPages);
-  const footerLabel = meta.total === 1 ? "1 servico cadastrado" : `${meta.total} servicos cadastrados`;
+  const footerLabel = meta.total === 1 ? "1 serviço cadastrado" : `${meta.total} serviços cadastrados`;
 
   async function handleCreateService(serviceData) {
     try {
@@ -144,7 +144,7 @@ export default function useServicosPage() {
       setPage(1);
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      alert(requestError.message || "Nao foi possivel salvar o servico.");
+      alert(requestError.message || "Não foi possível salvar o serviço.");
       return false;
     }
 
@@ -161,7 +161,7 @@ export default function useServicosPage() {
       setEditingService(null);
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      alert(requestError.message || "Nao foi possivel atualizar o servico.");
+      alert(requestError.message || "Não foi possível atualizar o serviço.");
       return false;
     }
 
@@ -192,12 +192,12 @@ export default function useServicosPage() {
 
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      alert(requestError.message || "Nao foi possivel atualizar o status do servico.");
+      alert(requestError.message || "Não foi possível atualizar o status do serviço.");
     }
   }
 
   async function handleDeleteService(service) {
-    const confirmed = window.confirm(`Deseja excluir o servico ${service.name}?`);
+    const confirmed = window.confirm(`Deseja excluir o serviço ${service.name}?`);
 
     if (!confirmed) {
       return;
@@ -221,7 +221,7 @@ export default function useServicosPage() {
 
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      alert(requestError.message || "Nao foi possivel excluir o servico.");
+      alert(requestError.message || "Não foi possível excluir o serviço.");
     }
   }
 

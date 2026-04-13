@@ -1,7 +1,7 @@
 import RoomRow from "./RoomRow";
 import RoomsEmptyState from "./RoomsEmptyState";
 
-const ROOM_TABLE_COLUMNS = ["Sala", "Status", "Atendimentos/mes", "Acoes"];
+const ROOM_TABLE_COLUMNS = ["Sala", "Status", "Atendimentos/mês", "Ações"];
 
 export default function RoomsTable({
   actions = [],

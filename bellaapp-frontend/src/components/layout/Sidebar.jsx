@@ -30,7 +30,7 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
   async function handleLogout() {
     const shouldLogout = await showConfirmAlert({
       title: "Tem certeza que quer sair mesmo?",
-      text: "Sua sessao atual sera encerrada.",
+      text: "Sua sessão atual será encerrada.",
       confirmButtonText: "Sair",
       cancelButtonText: "Continuar aqui",
     });
@@ -85,9 +85,9 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
           {!collapsed && "Clientes"}
         </NavLink>
 
-        <NavLink to="/servicos" className="sidebar-link" aria-label="Servicos">
+        <NavLink to="/servicos" className="sidebar-link" aria-label="Serviços">
           <Briefcase size={18} />
-          {!collapsed && "Servicos"}
+          {!collapsed && "Serviços"}
         </NavLink>
 
         <NavLink to="/rooms" className="sidebar-link" aria-label="Salas">

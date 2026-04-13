@@ -60,13 +60,14 @@ export default function AppointmentModal({
       <div className="form-modal-form">
         <div className="form-modal-grid">
           <InfoField label="Cliente" value={appointmentModel.clientName} />
-          <InfoField label="Servico" value={appointmentModel.serviceName} />
+          <InfoField label="Serviço" value={appointmentModel.serviceName} />
           <InfoField label="Profissional" value={appointmentModel.professionalName} />
+          <InfoField label="Sala" value={appointmentModel.roomName} />
           <InfoField label="Data" value={appointmentModel.formattedDate} />
-          <InfoField label="Horario" value={appointmentModel.hour} />
+          <InfoField label="Horário" value={appointmentModel.hour} />
           <InfoField label="Status" value={appointmentModel.statusLabel} />
           <InfoField
-            label="Observacoes"
+            label="Observações"
             value={appointmentModel.notesLabel}
             fullWidth
           />

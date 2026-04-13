@@ -7,15 +7,15 @@ const STATUS_FILTERS = [
 ];
 
 const DURATION_OPTIONS = [
-  { value: "todos", label: "Todas duracoes" },
-  { value: "ate-30", label: "Ate 30min" },
+  { value: "todos", label: "Todas durações" },
+  { value: "ate-30", label: "Até 30min" },
   { value: "30-60", label: "30-60min" },
   { value: "60+", label: "60min+" },
 ];
 
 const PRICE_RANGE_OPTIONS = [
-  { value: "todos", label: "Todos os precos" },
-  { value: "ate-100", label: "Ate R$100" },
+  { value: "todos", label: "Todos os preços" },
+  { value: "ate-100", label: "Até R$100" },
   { value: "100-200", label: "R$100-R$200" },
   { value: "200+", label: "R$200+" },
 ];
@@ -39,7 +39,7 @@ export default function ServicosToolbar({
           type="text"
           value={search}
           onChange={(event) => onSearchChange?.(event.target.value)}
-          placeholder="Buscar servico..."
+          placeholder="Buscar serviço..."
         />
       </label>
 

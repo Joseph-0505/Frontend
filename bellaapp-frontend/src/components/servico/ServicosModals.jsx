@@ -20,14 +20,14 @@ export default function ServicosModals({
           onClose={newServiceModal.close}
           onSave={onCreateService}
           showCatalogExtras
-          description="Cadastre nome, preco, duracao, icone e status do servico."
+          description="Cadastre nome, preço, duração, ícone e status do serviço."
         />
       ) : null}
 
       {editingService ? (
         <NovoServico
-          title="Editar Servico"
-          submitLabel="Salvar alteracoes"
+          title="Editar Serviço"
+          submitLabel="Salvar alterações"
           initialValues={editingService}
           onClose={onCloseEditingService}
           onSave={onUpdateService}

@@ -16,6 +16,7 @@ import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
 import useAgendaWeekNavigation from "../../hooks/useAgendaWeekNavigation";
 import useAgendaData from "../../hooks/useAgendaData";
 import useAgendaMetrics from "../../hooks/useAgendaMetrics";
+import { toIsoLocal } from "../../hooks/useAgendaWeekNavigation";
 import { showErrorAlert } from "../../utils/alerts";
 
 import "../../styles/agenda/agenda.css";
@@ -47,6 +48,7 @@ export default function AgendaPage() {
     hours,
     normalizedAppointments,
     professionals,
+    rooms,
     services,
     createAppointment,
     refreshAgendaData,
@@ -227,12 +229,13 @@ export default function AgendaPage() {
       {newAppointmentModal.isOpen ? (
         <NovoAgendamento
           clients={clients}
-          defaultDate={weekDays[0]?.key}
+          defaultDate={toIsoLocal(new Date())}
           hours={hours}
           initialValues={newAppointmentInitialValues}
           onClose={closeNewAppointment}
           onSave={handleNewAppointment}
           professionals={professionals}
+          rooms={rooms}
           services={services}
         />
       ) : null}

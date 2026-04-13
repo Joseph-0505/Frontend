@@ -43,11 +43,11 @@ export default function ServicosPage() {
   return (
     <section className="services-page">
       <Header
-        title="Servicos"
-        subtitle="Gerencie seus servicos, valores e duracao de forma simples e eficiente"
+        title="Serviços"
+        subtitle="Gerencie seus serviços, valores e duração de forma simples e eficiente"
         actions={
           <button type="button" className="btn-primary" onClick={newServiceModal.open}>
-            + Novo Servico
+            + Novo Serviço
           </button>
         }
       />
@@ -66,7 +66,7 @@ export default function ServicosPage() {
         />
 
         {error ? <p className="agenda-feedback agenda-feedback-error">{error}</p> : null}
-        {loading ? <p className="agenda-feedback">Carregando servicos...</p> : null}
+  {loading ? <p className="agenda-feedback">Carregando serviços...</p> : null}
 
         {!loading && !error ? (
           <>

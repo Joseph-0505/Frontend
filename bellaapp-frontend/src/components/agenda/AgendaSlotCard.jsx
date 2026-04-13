@@ -6,13 +6,17 @@ export default function AgendaSlotCard({
   draggable = false,
   isDragging = false,
   isDropSettled = false,
+  stacked = false,
   slotSpan = 1,
   onClick,
   onDragEnd,
   onDragStart,
 }) {
   const status = appointment.status || "cancelado";
-  const className = `agenda-slot-card${isDragging ? " is-dragging" : ""}${isDropSettled ? " is-drop-settled" : ""}`;
+  const secondaryMeta = [appointment.profissional, appointment.sala ? `Sala: ${appointment.sala}` : ""]
+    .filter(Boolean)
+    .join(" • ");
+  const className = `agenda-slot-card${stacked ? " is-stacked" : ""}${isDragging ? " is-dragging" : ""}${isDropSettled ? " is-drop-settled" : ""}`;
 
   return (
     <button
@@ -37,8 +41,8 @@ export default function AgendaSlotCard({
 
       <p className="agenda-slot-service">{appointment.servico}</p>
 
-      {appointment.profissional ? (
-        <p className="agenda-slot-text agenda-slot-secondary">{appointment.profissional}</p>
+      {secondaryMeta ? (
+        <p className="agenda-slot-text agenda-slot-secondary">{secondaryMeta}</p>
       ) : null}
 
       <div className="agenda-slot-footer">

@@ -1,6 +1,7 @@
 import { apiGet, apiPost, apiPut } from "./api";
 import { listClients } from "./clientService";
 import { listProfessionals } from "./professionalService";
+import { getRooms } from "./roomService";
 import { listServices } from "./serviceService";
 import {
   DEFAULT_TIME_SLOTS,
@@ -9,6 +10,7 @@ import {
 } from "../utils/timeUtils";
 
 const APPOINTMENTS_BASE_PATH = "/api/v1/appointments";
+const APPOINTMENT_CATALOG_LIMIT = 100;
 
 const API_TO_UI_STATUS = {
   SCHEDULED: "pendente",
@@ -74,10 +76,11 @@ function sortByScheduledAt(a, b) {
 }
 
 async function getAppointmentCatalog() {
-  const [clientsResponse, servicesResponse, professionalsResponse] = await Promise.all([
-    listClients({ page: 1, limit: 100 }),
-    listServices({ page: 1, limit: 100 }),
-    listProfessionals({ page: 1, limit: 100 }),
+  const [clientsResponse, servicesResponse, professionalsResponse, roomsResponse] = await Promise.all([
+    listClients({ page: 1, limit: APPOINTMENT_CATALOG_LIMIT }),
+    listServices({ page: 1, limit: APPOINTMENT_CATALOG_LIMIT }),
+    listProfessionals({ page: 1, limit: APPOINTMENT_CATALOG_LIMIT }),
+    getRooms({ page: 1, limit: APPOINTMENT_CATALOG_LIMIT }),
   ]);
 
   const clients = clientsResponse.items.map((client) => ({
@@ -100,32 +103,57 @@ async function getAppointmentCatalog() {
     status: professional.status,
   }));
 
+  const allRooms = roomsResponse.items
+    .map((room) => ({
+      id: room.id,
+      name: room.name,
+      color: room.color,
+      active: room.active,
+    }));
+  const rooms = allRooms.filter((room) => room.active);
+
   return {
     clients,
     professionals: allProfessionals.filter((professional) => professional.status === "ativo"),
+    rooms,
     services,
     clientById: new Map(clientsResponse.items.map((client) => [client.id, client])),
     professionalById: new Map(allProfessionals.map((professional) => [professional.id, professional])),
+    roomById: new Map(allRooms.map((room) => [room.id, room])),
     serviceById: new Map(services.map((service) => [service.id, service])),
+  };
+}
+
+export async function getAppointmentReferences() {
+  const catalog = await getAppointmentCatalog();
+
+  return {
+    clients: catalog.clients,
+    professionals: catalog.professionals,
+    rooms: catalog.rooms,
+    services: catalog.services.filter((service) => service.active),
   };
 }
 
 function toAgendaAppointment(appointment, catalog) {
   const client = catalog.clientById.get(appointment.clientId);
   const professional = catalog.professionalById.get(appointment.professionalId);
+  const room = catalog.roomById.get(appointment.roomId);
   const service = catalog.serviceById.get(appointment.serviceId);
 
   return {
     id: appointment.id,
     clientId: appointment.clientId,
     professionalId: appointment.professionalId || "",
+    roomId: appointment.roomId || "",
     serviceId: appointment.serviceId,
     scheduledAt: appointment.scheduledAt,
     day: toIsoLocal(new Date(appointment.scheduledAt)),
     hour: formatHour(appointment.scheduledAt),
-    cliente: client?.name || "Cliente nao encontrado",
-    servico: service?.name || "Servico nao encontrado",
+    cliente: client?.name || "Cliente não encontrado",
+    servico: service?.name || "Serviço não encontrado",
     profissional: professional?.name || "",
+    sala: appointment.roomId ? room?.name || "Sala não encontrada" : "",
     status: mapApiStatusToUi(appointment.status),
     valorEstimado: Number(service?.price || 0),
     duracaoMin: Number(service?.durationMinutes || 0),
@@ -164,6 +192,7 @@ export async function getAgendaData(referenceDate = new Date()) {
     appointments: appointments.map((appointment) => toAgendaAppointment(appointment, catalog)).sort(sortByScheduledAt),
     clients: catalog.clients,
     professionals: catalog.professionals,
+    rooms: catalog.rooms,
     services: catalog.services.filter((service) => service.active),
   };
 }
@@ -173,6 +202,7 @@ export async function createAppointment(input) {
     clientId: input.clientId,
     serviceId: input.serviceId,
     ...(input.professionalId ? { professionalId: input.professionalId } : {}),
+    ...(input.roomId ? { roomId: input.roomId } : {}),
     scheduledAt: buildScheduledAt(input.day || input.data, input.hour || input.hora),
     status: mapUiStatusToApi(input.status),
     ...(String(input.notes || input.observacoes || "").trim()
@@ -200,11 +230,16 @@ export async function updateAppointment(currentAppointment, changes) {
     typeof changes === "object" && Object.prototype.hasOwnProperty.call(changes, "professionalId")
       ? changes.professionalId
       : currentAppointment.professionalId;
+  const nextRoomId =
+    typeof changes === "object" && Object.prototype.hasOwnProperty.call(changes, "roomId")
+      ? changes.roomId
+      : currentAppointment.roomId;
 
   const payload = {
     clientId: currentAppointment.clientId,
     serviceId: currentAppointment.serviceId,
     ...(nextProfessionalId ? { professionalId: nextProfessionalId } : {}),
+    ...(nextRoomId ? { roomId: nextRoomId } : {}),
     scheduledAt: buildScheduledAt(nextDay, nextHour),
     status: mapUiStatusToApi(nextStatus),
     ...(String(nextNotes || "").trim() ? { notes: String(nextNotes).trim() } : {}),
@@ -215,37 +250,30 @@ export async function updateAppointment(currentAppointment, changes) {
   return response?.data ? toAgendaAppointment(response.data, catalog) : null;
 }
 
-export async function getDashboardData() {
-  const today = toIsoLocal(new Date());
+export async function getDashboardData(referenceDate = new Date()) {
+  const selectedDate = typeof referenceDate === "string" && referenceDate ? referenceDate : toIsoLocal(referenceDate);
   const catalog = await getAppointmentCatalog();
-  const [todayResponse, latestResponse] = await Promise.all([
-    apiGet(APPOINTMENTS_BASE_PATH, {
-      query: { page: 1, limit: 100, date: today },
-    }),
-    apiGet(APPOINTMENTS_BASE_PATH, {
-      query: { page: 1, limit: 100 },
-    }),
-  ]);
+  const dayResponse = await apiGet(APPOINTMENTS_BASE_PATH, {
+    query: { page: 1, limit: 100, date: selectedDate },
+  });
 
-  const todayAppointments = (todayResponse?.data || [])
+  const dayAppointments = (dayResponse?.data || [])
     .map((appointment) => toAgendaAppointment(appointment, catalog))
     .sort((a, b) => a.hour.localeCompare(b.hour));
 
-  const latestAppointments = (latestResponse?.data || []).map((appointment) => toAgendaAppointment(appointment, catalog));
-
-  const confirmados = todayAppointments.filter((appointment) => appointment.status === "confirmado").length;
-  const pendentes = todayAppointments.filter((appointment) => appointment.status === "pendente").length;
-  const cancelados = todayAppointments.filter((appointment) => appointment.status === "cancelado").length;
-  const concluidos = todayAppointments.filter((appointment) => appointment.status === "concluido").length;
-  const busySlotCount = createOccupiedSlotKeySet(todayAppointments, DEFAULT_TIME_SLOTS).size;
-  const faturamentoPrevisto = todayAppointments
+  const confirmados = dayAppointments.filter((appointment) => appointment.status === "confirmado").length;
+  const pendentes = dayAppointments.filter((appointment) => appointment.status === "pendente").length;
+  const cancelados = dayAppointments.filter((appointment) => appointment.status === "cancelado").length;
+  const concluidos = dayAppointments.filter((appointment) => appointment.status === "concluido").length;
+  const busySlotCount = createOccupiedSlotKeySet(dayAppointments, DEFAULT_TIME_SLOTS).size;
+  const faturamentoPrevisto = dayAppointments
     .filter((appointment) => appointment.status !== "cancelado")
     .reduce((total, appointment) => total + Number(appointment.valorEstimado || 0), 0);
-  const faturamentoRecebido = todayAppointments
+  const faturamentoRecebido = dayAppointments
     .filter((appointment) => appointment.status === "concluido")
     .reduce((total, appointment) => total + Number(appointment.valorEstimado || 0), 0);
 
-  const countsByService = latestAppointments.reduce((accumulator, appointment) => {
+  const countsByService = dayAppointments.reduce((accumulator, appointment) => {
     accumulator.set(appointment.servico, (accumulator.get(appointment.servico) || 0) + 1);
     return accumulator;
   }, new Map());
@@ -264,25 +292,25 @@ export async function getDashboardData() {
   if (pendentes > 0) {
     alertas.push({
       id: "pending-appointments",
-      mensagem: `${pendentes} agendamentos aguardando confirmacao hoje.`,
+      mensagem: `${pendentes} agendamentos aguardando confirmação nesta data.`,
     });
   }
   if (cancelados > 0) {
     alertas.push({
       id: "canceled-appointments",
-      mensagem: `${cancelados} cancelamentos registrados hoje.`,
+      mensagem: `${cancelados} cancelamentos registrados nesta data.`,
     });
   }
-  if (todayAppointments.length === 0) {
+  if (dayAppointments.length === 0) {
     alertas.push({
       id: "empty-agenda",
-      mensagem: "Nenhum agendamento para hoje.",
+      mensagem: "Nenhum agendamento para esta data.",
     });
   }
 
   return {
     resumo: {
-      agendamentosHoje: todayAppointments.length,
+      agendamentosHoje: dayAppointments.length,
       confirmados,
       pendentes,
       cancelados,
@@ -293,10 +321,11 @@ export async function getDashboardData() {
       faturamentoRecebido,
       atualizadoEm: new Date().toISOString(),
     },
-    agendaHoje: todayAppointments.map((appointment) => ({
+    agendaHoje: dayAppointments.map((appointment) => ({
       id: appointment.id,
       clientId: appointment.clientId,
       professionalId: appointment.professionalId,
+      roomId: appointment.roomId,
       serviceId: appointment.serviceId,
       day: appointment.day,
       hour: appointment.hour,
@@ -307,6 +336,8 @@ export async function getDashboardData() {
       servicoNome: appointment.servico,
       profissional: appointment.profissional,
       profissionalNome: appointment.profissional,
+      sala: appointment.sala,
+      salaNome: appointment.sala,
       status: appointment.status,
       duracaoMin: appointment.duracaoMin,
       endHour: appointment.endHour,
@@ -319,6 +350,7 @@ export async function getDashboardData() {
     references: {
       clients: catalog.clients,
       professionals: catalog.professionals,
+      rooms: catalog.rooms,
       services: catalog.services.filter((service) => service.active),
     },
   };

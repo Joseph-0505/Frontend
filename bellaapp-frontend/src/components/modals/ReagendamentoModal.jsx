@@ -109,7 +109,7 @@ export default function ReagendamentoModal({
 
           <h3>Escolha um dia</h3>
           <p className="appointment-modal-section-hint">
-            Os dias sao atualizados conforme a semana selecionada.
+            Os dias são atualizados conforme a semana selecionada.
           </p>
 
           {isWeekLoading ? (
@@ -127,7 +127,7 @@ export default function ReagendamentoModal({
                   className={`slot-btn ${isSelected ? "selected" : ""}`}
                   onClick={() => selectDay(day.key)}
                   disabled={isWeekLoading || day.count === 0}
-                  title={day.count === 0 ? "Sem horarios disponiveis nesta data." : `${day.count} horarios livres`}
+                  title={day.count === 0 ? "Sem horários disponíveis nesta data." : `${day.count} horários livres`}
                 >
                   {day.label}
                 </button>

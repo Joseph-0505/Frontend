@@ -16,7 +16,7 @@ export default function ServicoPreviewModal({
 
   return (
     <FormModalShell
-      title="Servico"
+      title="Serviço"
       description="Consulte os detalhes principais e ajuste o status sem sair da listagem."
       onClose={onClose}
       size="compact"
@@ -24,7 +24,7 @@ export default function ServicoPreviewModal({
       <div className="service-preview">
         <section className="service-preview-hero">
           <div>
-            <span className="service-preview-eyebrow">Catalogo</span>
+            <span className="service-preview-eyebrow">Catálogo</span>
             <h3>{service.name}</h3>
           </div>
 
@@ -35,19 +35,19 @@ export default function ServicoPreviewModal({
           <article className="service-preview-card">
             <span className="service-preview-card-label">
               <BadgeDollarSign size={16} aria-hidden="true" />
-              Preco
+              Preço
             </span>
             <strong>{formatCurrency(service.price)}</strong>
-            <p>Valor atual praticado no catalogo.</p>
+            <p>Valor atual praticado no catálogo.</p>
           </article>
 
           <article className="service-preview-card">
             <span className="service-preview-card-label">
               <CalendarClock size={16} aria-hidden="true" />
-              Duracao
+              Duração
             </span>
             <strong>{formatDuration(service.durationMinutes)}</strong>
-            <p>Tempo medio reservado por atendimento.</p>
+            <p>Tempo médio reservado por atendimento.</p>
           </article>
 
           <article className="service-preview-card">
@@ -62,9 +62,9 @@ export default function ServicoPreviewModal({
           <article className="service-preview-card">
             <span className="service-preview-card-label">
               <FileText size={16} aria-hidden="true" />
-              Descricao
+              Descrição
             </span>
-            <strong>{service.description ? "Detalhes cadastrados" : "Sem descricao"}</strong>
+            <strong>{service.description ? "Detalhes cadastrados" : "Sem descrição"}</strong>
             <p>{service.description || "Adicione contexto para orientar a equipe e padronizar a venda."}</p>
           </article>
         </section>
@@ -81,7 +81,7 @@ export default function ServicoPreviewModal({
               onClick={() => onToggleStatus?.(service)}
               disabled={busy}
             >
-              {service.active ? "Inativar servico" : "Ativar servico"}
+              {service.active ? "Inativar serviço" : "Ativar serviço"}
             </button>
 
             <button
@@ -90,7 +90,7 @@ export default function ServicoPreviewModal({
               onClick={() => onEdit?.(service)}
               disabled={busy}
             >
-              Editar servico
+              Editar serviço
             </button>
           </div>
         </footer>

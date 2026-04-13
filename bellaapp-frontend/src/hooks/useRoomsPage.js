@@ -89,7 +89,7 @@ export default function useRoomsPage() {
       setPage(1);
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Nao foi possivel salvar a sala.");
+      await showErrorAlert(requestError.message || "Não foi possível salvar a sala.");
       return false;
     }
 
@@ -106,7 +106,7 @@ export default function useRoomsPage() {
       setEditingRoom(null);
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Nao foi possivel atualizar a sala.");
+      await showErrorAlert(requestError.message || "Não foi possível atualizar a sala.");
       return false;
     }
 
@@ -139,7 +139,7 @@ export default function useRoomsPage() {
 
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Nao foi possivel excluir a sala.");
+      await showErrorAlert(requestError.message || "Não foi possível excluir a sala.");
     }
   }
 
@@ -161,7 +161,7 @@ export default function useRoomsPage() {
 
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Nao foi possivel atualizar o status da sala.");
+      await showErrorAlert(requestError.message || "Não foi possível atualizar o status da sala.");
     }
   }
 

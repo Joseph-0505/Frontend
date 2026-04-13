@@ -1,6 +1,6 @@
 import { useState } from "react";
+import { NumericFormat } from "react-number-format";
 import FormModalShell from "./FormModalShell";
-import formatCurrency from "../../utils/formatters";
 
 const STATUS_OPTIONS = [
   { value: "ativo", label: "Ativo" },
@@ -9,19 +9,23 @@ const STATUS_OPTIONS = [
 
 const ICON_OPTIONS = [
   { value: "face", label: "Facial" },
-  { value: "syringe", label: "Injetavel" },
+  { value: "syringe", label: "Injetável" },
   { value: "wand", label: "Laser" },
   { value: "drop", label: "Corporal" },
   { value: "lotus", label: "Relaxamento" },
-  { value: "flask", label: "Quimico" },
+  { value: "flask", label: "Químico" },
   { value: "spark", label: "Tecnologia" },
   { value: "pulse", label: "Energia" },
   { value: "leaf", label: "Bem-estar" },
 ];
 
-function parseCurrencyInput(value) {
+function normalizePriceValue(value) {
+  if (value === "" || value == null) {
+    return "";
+  }
+
   if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
+    return Number.isFinite(value) ? String(value) : "";
   }
 
   const normalizedValue = String(value || "")
@@ -31,53 +35,18 @@ function parseCurrencyInput(value) {
     .replace(",", ".");
 
   const amount = Number(normalizedValue);
-  return Number.isFinite(amount) ? amount : 0;
-}
-
-function formatCurrencyInput(value) {
-  if (value === "" || value == null) {
-    return "";
-  }
-
-  const amount = parseCurrencyInput(value);
-
-  if (amount === 0 && !String(value).trim()) {
-    return "";
-  }
-
-  return formatCurrency(amount);
-}
-
-function sanitizeCurrencyInput(value) {
-  const normalizedValue = String(value || "").replace(/[^\d,]/g, "");
-  const [integerPart = "", ...decimalParts] = normalizedValue.split(",");
-  const normalizedInteger = integerPart.replace(/^0+(?=\d)/, "");
-  const decimalPart = decimalParts.join("").slice(0, 2);
-
-  if (!normalizedInteger && !decimalPart) {
-    return "";
-  }
-
-  return decimalPart ? `${normalizedInteger || "0"},${decimalPart}` : normalizedInteger;
-}
-
-function toEditableCurrencyInput(value) {
-  if (value === "" || value == null) {
-    return "";
-  }
-
-  return parseCurrencyInput(value).toFixed(2).replace(".", ",");
+  return Number.isFinite(amount) ? String(amount) : "";
 }
 
 export default function NovoServico({
   closeOnSave = true,
-  description = "Defina preco, duracao e status para manter o catalogo de servicos atualizado.",
+  description = "Defina preço, duração e status para manter o catálogo de serviços atualizado.",
   initialValues = {},
   onClose,
   onSave,
   showCatalogExtras = true,
-  submitLabel = "Salvar servico",
-  title = "Novo Servico",
+  submitLabel = "Salvar serviço",
+  title = "Novo Serviço",
 }) {
   const [formData, setFormData] = useState(() => {
     const baseState = {
@@ -92,7 +61,7 @@ export default function NovoServico({
     return {
       ...baseState,
       ...initialValues,
-      price: formatCurrencyInput(initialValues.price ?? baseState.price),
+      price: normalizePriceValue(initialValues.price ?? baseState.price),
       description: initialValues.description || initialValues.notes || "",
     };
   });
@@ -103,21 +72,7 @@ export default function NovoServico({
 
     setFormData((current) => ({
       ...current,
-      [name]: name === "price" ? sanitizeCurrencyInput(value) : value,
-    }));
-  }
-
-  function handlePriceFocus() {
-    setFormData((current) => ({
-      ...current,
-      price: toEditableCurrencyInput(current.price),
-    }));
-  }
-
-  function handlePriceBlur() {
-    setFormData((current) => ({
-      ...current,
-      price: formatCurrencyInput(current.price),
+      [name]: value,
     }));
   }
 
@@ -128,7 +83,7 @@ export default function NovoServico({
     try {
       const result = await onSave?.({
         name: formData.name.trim(),
-        price: parseCurrencyInput(formData.price),
+        price: Number(formData.price || 0),
         durationMinutes: Number(formData.durationMinutes) || 60,
         description: formData.description.trim(),
         status: formData.status,
@@ -148,7 +103,7 @@ export default function NovoServico({
       <form className="form-modal-form" onSubmit={handleSubmit}>
         <div className="form-modal-grid">
           <div className="form-modal-field form-modal-field-full">
-            <label htmlFor="novo-servico-nome">Nome do servico</label>
+            <label htmlFor="novo-servico-nome">Nome do serviço</label>
             <input
               id="novo-servico-nome"
               name="name"
@@ -160,23 +115,32 @@ export default function NovoServico({
           </div>
 
           <div className="form-modal-field">
-            <label htmlFor="novo-servico-preco">Preco</label>
-            <input
+            <label htmlFor="novo-servico-preco">Preço</label>
+            <NumericFormat
               id="novo-servico-preco"
               name="price"
-              type="text"
-              inputMode="decimal"
               value={formData.price}
-              onChange={handleChange}
-              onFocus={handlePriceFocus}
-              onBlur={handlePriceBlur}
+              valueIsNumericString
+              thousandSeparator="."
+              decimalSeparator=","
+              decimalScale={2}
+              fixedDecimalScale
+              allowNegative={false}
+              prefix="R$ "
+              inputMode="numeric"
+              onValueChange={({ value }) => {
+                setFormData((current) => ({
+                  ...current,
+                  price: value,
+                }));
+              }}
               placeholder="R$ 350,00"
               required
             />
           </div>
 
           <div className="form-modal-field">
-            <label htmlFor="novo-servico-duracao">Duracao (min)</label>
+            <label htmlFor="novo-servico-duracao">Duração (min)</label>
             <input
               id="novo-servico-duracao"
               name="durationMinutes"
@@ -202,7 +166,7 @@ export default function NovoServico({
 
           {showCatalogExtras ? (
             <div className="form-modal-field">
-              <label htmlFor="novo-servico-icone">Icone</label>
+              <label htmlFor="novo-servico-icone">Ícone</label>
               <select id="novo-servico-icone" name="icon" value={formData.icon} onChange={handleChange}>
                 {ICON_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -214,7 +178,7 @@ export default function NovoServico({
           ) : null}
 
           <div className="form-modal-field form-modal-field-full">
-            <label htmlFor="novo-servico-detalhes">{showCatalogExtras ? "Detalhes do servico" : "Descricao"}</label>
+            <label htmlFor="novo-servico-detalhes">{showCatalogExtras ? "Detalhes do serviço" : "Descrição"}</label>
             <textarea
               id="novo-servico-detalhes"
               name="description"
@@ -222,8 +186,8 @@ export default function NovoServico({
               onChange={handleChange}
               placeholder={
                 showCatalogExtras
-                  ? "Ex: combinacoes indicadas, preparo previo ou observacoes internas."
-                  : "Descreva rapidamente o servico."
+                  ? "Ex: combinações indicadas, preparo prévio ou observações internas."
+                  : "Descreva rapidamente o serviço."
               }
             />
           </div>
