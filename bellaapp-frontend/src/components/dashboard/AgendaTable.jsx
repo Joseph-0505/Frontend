@@ -50,7 +50,7 @@ export default function AgendaTable({
                   <td className="td-actions">
                     <AppointmentActionsMenu
                       rowId={appointment.id}
-                      actions={getActionsByStatus(appointment.status)}
+                      actions={getActionsByStatus(appointment)}
                       onAction={(action) => onAction?.(appointment, action)}
                     />
                   </td>

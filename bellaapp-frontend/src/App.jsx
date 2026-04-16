@@ -7,6 +7,7 @@ import ClientesPage from "./pages/clientes/ClientesPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import LandingPage from "./pages/landing/LandingPage";
 import ProfilePage from "./pages/perfil/ProfilePage";
+import CaixaPage from "./pages/caixa/CaixaPage";
 import RoomsPage from "./pages/rooms/RoomsPage";
 import ServicosPage from "./pages/servicos/ServicosPage";
 import ProfissionaisPage from "./pages/profissionais/ProfissionaisPage";
@@ -123,6 +124,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/clientes" element={<ClientesPage />} />
+          <Route path="/caixa" element={<CaixaPage />} />
           <Route path="/rooms" element={<RoomsPage />} />
           <Route path="/servicos" element={<ServicosPage />} />
           <Route path="/profissionais" element={<ProfissionaisPage />} />

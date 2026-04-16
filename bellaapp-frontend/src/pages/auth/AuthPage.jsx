@@ -317,7 +317,7 @@ export default function AuthPage() {
             ) : null}
 
             <button type="submit" className="auth-button" disabled={submitting}>
-              {submitting ? "Enviando..." : isRegisterMode ? "Criar conta" : "Entrar"}
+              {submitting ? "Processando..." : isRegisterMode ? "Criar conta" : "Entrar"}
             </button>
           </form>
         </div>

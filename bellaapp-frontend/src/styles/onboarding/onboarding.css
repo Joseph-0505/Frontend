@@ -48,8 +48,16 @@
   align-items: start;
   align-content: start;
   background:
-    radial-gradient(circle at top left, rgba(232, 160, 191, 0.16), transparent 34%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 247, 250, 0.9) 100%);
+    radial-gradient(
+      circle at top left,
+      rgba(232, 160, 191, 0.16),
+      transparent 34%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.86) 0%,
+      rgba(255, 247, 250, 0.9) 100%
+    );
 }
 
 .onboarding-chip {
@@ -636,7 +644,6 @@
   .onboarding-brand-panel {
     padding: 12px;
   }
-
 
   .onboarding-card {
     padding: 16px;

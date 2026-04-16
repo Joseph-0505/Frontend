@@ -8,14 +8,17 @@ import useDisclosure from "../../hooks/useDisclosure";
 import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
 import { toIsoLocal } from "../../hooks/useAgendaWeekNavigation";
 import NovoAgendamento from "../../components/modals/NovoAgendamento";
+import AppointmentPaymentModal from "../../components/modals/AppointmentPaymentModal";
 import NovoCliente from "../../components/modals/NovoCliente";
 import ReagendamentoModal from "../../components/modals/ReagendamentoModal";
 import {
+  completeAppointment,
   createAppointment,
   getAgendaData,
   getDashboardData,
   updateAppointment,
 } from "../../services/appointmentService";
+import { payBilling } from "../../services/cashService";
 import { createClient } from "../../services/clientService";
 import { showErrorAlert } from "../../utils/alerts";
 import { DEFAULT_TIME_SLOTS } from "../../utils/timeUtils";
@@ -69,12 +72,14 @@ export default function DashboardPage() {
   const [topServicos, setTopServicos] = useState([]);
   const [references, setReferences] = useState({ clients: [], professionals: [], rooms: [], services: [] });
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [paymentAppointment, setPaymentAppointment] = useState(null);
   const [selectedDate, setSelectedDate] = useState(() => toIsoLocal(new Date()));
   const [rescheduleAppointments, setRescheduleAppointments] = useState([]);
   const [rescheduleHours, setRescheduleHours] = useState([]);
   const [rescheduleLoading, setRescheduleLoading] = useState(false);
   const newAppointmentModal = useDisclosure();
   const newClientModal = useDisclosure();
+  const paymentModal = useDisclosure();
 
   const { user: currentUser } = useAuth();
   const appointmentModalRequestRef = useRef(0);
@@ -145,6 +150,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     closeReagendamentoModal();
+    closePaymentModal();
   }, [selectedDate]);
 
   function handleSelectedDateChange(nextDate) {
@@ -173,6 +179,16 @@ export default function DashboardPage() {
     setRescheduleAppointments([]);
     setRescheduleHours([]);
     setRescheduleLoading(false);
+  }
+
+  function openPaymentModal(appointment) {
+    setPaymentAppointment(appointment);
+    paymentModal.open();
+  }
+
+  function closePaymentModal() {
+    setPaymentAppointment(null);
+    paymentModal.close();
   }
 
   async function openReagendamentoModal(appointment) {
@@ -208,6 +224,11 @@ export default function DashboardPage() {
   }
 
   async function handleAgendaAction(appt, action) {
+    if (action === "Receber") {
+      openPaymentModal(appt);
+      return;
+    }
+
     if (action === "Remarcar") {
       await openReagendamentoModal(appt);
       return;
@@ -215,7 +236,6 @@ export default function DashboardPage() {
 
     const mapStatus = {
       Confirmar: "confirmado",
-      Concluir: "concluido",
       Cancelar: "cancelado",
     };
 
@@ -253,6 +273,37 @@ export default function DashboardPage() {
     }
 
     return true;
+  }
+
+  async function handleAppointmentPayment(payload) {
+    if (!paymentAppointment) {
+      return false;
+    }
+
+    try {
+      const completion = await completeAppointment(paymentAppointment.id, {
+        receivedBy: payload.receivedBy,
+      });
+      const billingId = completion?.billing?.id || paymentAppointment.billingId;
+
+      if (payload.paymentMode !== "depois") {
+        if (!billingId) {
+          throw new Error("Cobrança não encontrada para este atendimento.");
+        }
+
+        await payBilling(billingId, {
+          amount: payload.amount,
+          paymentMethod: payload.paymentMethod,
+          notes: payload.notes,
+        });
+      }
+
+      await loadDashboard();
+      return true;
+    } catch (err) {
+      await showErrorAlert(err.message || "Não foi possível registrar o recebimento.");
+      return false;
+    }
   }
 
   async function handleDashboardAppointmentSave(appointment) {
@@ -362,6 +413,14 @@ export default function DashboardPage() {
           onClose={newClientModal.close}
           onSave={handleDashboardClientSave}
           title="Cadastrar Cliente"
+        />
+      ) : null}
+
+      {paymentModal.isOpen && paymentAppointment ? (
+        <AppointmentPaymentModal
+          appointment={paymentAppointment}
+          onClose={closePaymentModal}
+          onSave={handleAppointmentPayment}
         />
       ) : null}
     </section>

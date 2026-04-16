@@ -13,7 +13,11 @@ function getDigits(value: ValidationInput, maxLength?: number): string {
 }
 
 export function isValidEmail(value: ValidationInput): boolean {
-  return EMAIL_REGEX.test(String(value || "").trim().toLowerCase());
+  return EMAIL_REGEX.test(
+    String(value || "")
+      .trim()
+      .toLowerCase(),
+  );
 }
 
 export function validateEmail(value: ValidationInput): string {
@@ -79,7 +83,10 @@ export function isValidCnpj(value: ValidationInput): boolean {
   const weightsB = [6, ...weightsA];
 
   const calcDigit = (digits: number[], weights: number[]): number => {
-    const total = digits.reduce((sum, digit, index) => sum + digit * weights[index], 0);
+    const total = digits.reduce(
+      (sum, digit, index) => sum + digit * weights[index],
+      0,
+    );
     const remainder = total % 11;
 
     return remainder < 2 ? 0 : 11 - remainder;
@@ -138,7 +145,9 @@ export function validatePasswordConfirmation(
   password: ValidationInput,
   confirmPassword: ValidationInput,
 ): string {
-  return String(password || "") === String(confirmPassword || "") ? "" : "As senhas não coincidem.";
+  return String(password || "") === String(confirmPassword || "")
+    ? ""
+    : "As senhas não coincidem.";
 }
 
 export { EMAIL_REGEX };

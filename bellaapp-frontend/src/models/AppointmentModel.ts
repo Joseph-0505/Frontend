@@ -42,7 +42,9 @@ export default class AppointmentModel {
   }
 
   get statusLabel(): string {
-    return STATUS_LABELS[this.appointment.status] || this.appointment.status || "-";
+    return (
+      STATUS_LABELS[this.appointment.status] || this.appointment.status || "-"
+    );
   }
 
   get notesLabel(): string {

@@ -17,6 +17,7 @@ interface AppointmentModalProps {
   onClose: () => void;
   onUpdate?: AppointmentUpdateHandler;
   onRequestReschedule?: () => void;
+  onRequestReceive?: () => void;
 }
 
 function InfoField({ label, value, fullWidth = false }: InfoFieldProps) {
@@ -33,6 +34,7 @@ export default function AppointmentModal({
   onClose,
   onUpdate,
   onRequestReschedule,
+  onRequestReceive,
 }: AppointmentModalProps) {
   const {
     loading: actionLoading,
@@ -49,6 +51,14 @@ export default function AppointmentModal({
   }
 
   const appointmentModel = new AppointmentModel(appointment);
+  const canConfirm = appointment.status === "pendente";
+  const canCancel =
+    appointment.status === "pendente" || appointment.status === "confirmado";
+  const canReceive =
+    appointment.status === "confirmado" ||
+    (appointment.status === "concluido" && appointment.paymentStatus !== "pago");
+  const canReschedule =
+    appointment.status === "pendente" || appointment.status === "confirmado";
 
   return (
     <FormModalShell
@@ -79,7 +89,7 @@ export default function AppointmentModal({
         </div>
 
         <div className="form-modal-footer">
-          {onRequestReschedule ? (
+          {onRequestReschedule && canReschedule ? (
             <button
               type="button"
               className="form-modal-button form-modal-button-secondary"
@@ -90,23 +100,38 @@ export default function AppointmentModal({
             </button>
           ) : null}
 
-          <button
-            type="button"
-            className="form-modal-button appointment-modal-button-danger"
-            onClick={handleCancel}
-            disabled={actionLoading}
-          >
-            {actionLoading ? "Cancelando..." : "Cancelar"}
-          </button>
+          {canCancel ? (
+            <button
+              type="button"
+              className="form-modal-button appointment-modal-button-danger"
+              onClick={handleCancel}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Cancelando..." : "Cancelar"}
+            </button>
+          ) : null}
 
-          <button
-            type="button"
-            className="form-modal-button form-modal-button-primary"
-            onClick={handleConfirm}
-            disabled={actionLoading}
-          >
-            {actionLoading ? "Confirmando..." : "Confirmar"}
-          </button>
+          {canReceive && onRequestReceive ? (
+            <button
+              type="button"
+              className="form-modal-button form-modal-button-primary"
+              onClick={onRequestReceive}
+              disabled={actionLoading}
+            >
+              Receber
+            </button>
+          ) : null}
+
+          {canConfirm ? (
+            <button
+              type="button"
+              className="form-modal-button form-modal-button-primary"
+              onClick={handleConfirm}
+              disabled={actionLoading}
+            >
+              {actionLoading ? "Confirmando..." : "Confirmar"}
+            </button>
+          ) : null}
         </div>
       </div>
     </FormModalShell>

@@ -4,13 +4,15 @@ import AgendaHeader from "../../components/agenda/AgendaHeader";
 import AgendaWeekTable from "../../components/agenda/AgendaWeekTable";
 import SearchStatusFilters from "../../components/SearchStatusFilters";
 import AppointmentModal from "../../components/modals/AppointmentModal";
+import AppointmentPaymentModal from "../../components/modals/AppointmentPaymentModal";
 import NovoAgendamento from "../../components/modals/NovoAgendamento";
 import NovoCliente from "../../components/modals/NovoCliente";
 import ReagendamentoModal from "../../components/modals/ReagendamentoModal";
 import { API_STATUS_OPTIONS } from "../../utils/StatusUtils";
 
-import { getAgendaData as loadAgendaWeekData } from "../../services/agendaService";
+import { completeAppointment, getAgendaData as loadAgendaWeekData } from "../../services/appointmentService";
 import { createClient } from "../../services/clientService";
+import { payBilling } from "../../services/cashService";
 import useDisclosure from "../../hooks/useDisclosure";
 import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
 import useAgendaWeekNavigation from "../../hooks/useAgendaWeekNavigation";
@@ -26,8 +28,10 @@ export default function AgendaPage() {
   const [term, setTerm] = useState("");
   const [status, setStatus] = useState("todos");
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+  const [paymentAppointmentId, setPaymentAppointmentId] = useState(null);
   const [newAppointmentInitialValues, setNewAppointmentInitialValues] = useState({});
   const rescheduleModal = useDisclosure();
+  const paymentModal = useDisclosure();
   const newAppointmentModal = useDisclosure();
   const newClientModal = useDisclosure();
   const redirectToLogin = useUnauthorizedRedirect();
@@ -79,6 +83,11 @@ export default function AgendaPage() {
     [normalizedAppointments, selectedAppointmentId]
   );
 
+  const paymentAppointment = useMemo(
+    () => normalizedAppointments.find((appointment) => appointment.id === paymentAppointmentId) || null,
+    [normalizedAppointments, paymentAppointmentId]
+  );
+
   function openModal(appointment) {
     setSelectedAppointmentId(appointment.id);
     rescheduleModal.close();
@@ -89,12 +98,31 @@ export default function AgendaPage() {
     rescheduleModal.close();
   }
 
+  function openPaymentModal(appointment) {
+    setPaymentAppointmentId(appointment.id);
+    closeModal();
+    paymentModal.open();
+  }
+
+  function closePaymentModal() {
+    setPaymentAppointmentId(null);
+    paymentModal.close();
+  }
+
   function openRescheduleModal() {
     rescheduleModal.open();
   }
 
   function returnToAppointmentModal() {
     rescheduleModal.close();
+  }
+
+  function openSelectedAppointmentPayment() {
+    if (!selectedAppointment) {
+      return;
+    }
+
+    openPaymentModal(selectedAppointment);
   }
 
   function openNewAppointment(slot = null) {
@@ -146,6 +174,37 @@ export default function AgendaPage() {
     }
 
     return true;
+  }
+
+  async function handleAppointmentPayment(payload) {
+    if (!paymentAppointment) {
+      return false;
+    }
+
+    try {
+      const completion = await completeAppointment(paymentAppointment.id, {
+        receivedBy: payload.receivedBy,
+      });
+      const billingId = completion?.billing?.id || paymentAppointment.billingId;
+
+      if (payload.paymentMode !== "depois") {
+        if (!billingId) {
+          throw new Error("Cobrança não encontrada para este atendimento.");
+        }
+
+        await payBilling(billingId, {
+          amount: payload.amount,
+          paymentMethod: payload.paymentMethod,
+          notes: payload.notes,
+        });
+      }
+
+      await refreshAgendaData();
+      return true;
+    } catch (requestError) {
+      await showErrorAlert(requestError.message || "Não foi possível registrar o recebimento.");
+      return false;
+    }
   }
 
   const filterFeedback = hasFilters
@@ -205,6 +264,7 @@ export default function AgendaPage() {
                 <AppointmentModal
                   appointment={selectedAppointment}
                   onClose={closeModal}
+                  onRequestReceive={openSelectedAppointmentPayment}
                   onRequestReschedule={openRescheduleModal}
                   onUpdate={handleUpdateAppointment}
                 />
@@ -245,6 +305,14 @@ export default function AgendaPage() {
           description="Cadastre um cliente sem sair da agenda para agilizar novos agendamentos."
           onClose={newClientModal.close}
           onSave={handleNewClient}
+        />
+      ) : null}
+
+      {paymentModal.isOpen && paymentAppointment ? (
+        <AppointmentPaymentModal
+          appointment={paymentAppointment}
+          onClose={closePaymentModal}
+          onSave={handleAppointmentPayment}
         />
       ) : null}
     </section>

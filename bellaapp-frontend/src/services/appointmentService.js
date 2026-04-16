@@ -8,6 +8,11 @@ import {
   createOccupiedSlotKeySet,
   getAppointmentEndHour,
 } from "../utils/timeUtils";
+import {
+  mapBillingStatusFromApi,
+  mapReceivedByFromApi,
+  mapReceivedByToApi,
+} from "../utils/financeUtils";
 
 const APPOINTMENTS_BASE_PATH = "/api/v1/appointments";
 const APPOINTMENT_CATALOG_LIMIT = 100;
@@ -65,6 +70,21 @@ function mapApiStatusToUi(status) {
 
 function mapUiStatusToApi(status) {
   return UI_TO_API_STATUS[status] || "SCHEDULED";
+}
+
+function toBillingSummary(billing) {
+  if (!billing) {
+    return null;
+  }
+
+  return {
+    id: billing.id,
+    amount: Number(billing.amount || 0),
+    paidAmount: Number(billing.paidAmount || 0),
+    remainingAmount: Number(billing.remainingAmount || 0),
+    receivedBy: mapReceivedByFromApi(billing.receivedBy),
+    status: mapBillingStatusFromApi(billing.status),
+  };
 }
 
 function buildScheduledAt(date, hour) {
@@ -140,6 +160,13 @@ function toAgendaAppointment(appointment, catalog) {
   const professional = catalog.professionalById.get(appointment.professionalId);
   const room = catalog.roomById.get(appointment.roomId);
   const service = catalog.serviceById.get(appointment.serviceId);
+  const billingAmount = Number(appointment.billingAmount ?? service?.price ?? 0);
+  const outstandingAmount =
+    appointment.outstandingAmount === null || appointment.outstandingAmount === undefined
+      ? null
+      : Number(appointment.outstandingAmount);
+  const receivedAmount =
+    outstandingAmount === null ? 0 : Math.max(0, billingAmount - outstandingAmount);
 
   return {
     id: appointment.id,
@@ -156,6 +183,7 @@ function toAgendaAppointment(appointment, catalog) {
     sala: appointment.roomId ? room?.name || "Sala não encontrada" : "",
     status: mapApiStatusToUi(appointment.status),
     valorEstimado: Number(service?.price || 0),
+    valorRecebido: receivedAmount,
     duracaoMin: Number(service?.durationMinutes || 0),
     endHour: getAppointmentEndHour({
       hour: formatHour(appointment.scheduledAt),
@@ -163,6 +191,11 @@ function toAgendaAppointment(appointment, catalog) {
     }),
     observacoes: appointment.notes || "",
     notes: appointment.notes || "",
+    receivedBy: mapReceivedByFromApi(appointment.receivedBy),
+    billingId: appointment.billingId || "",
+    billingAmount,
+    paymentStatus: mapBillingStatusFromApi(appointment.billingStatus),
+    outstandingAmount,
   };
 }
 
@@ -213,6 +246,22 @@ export async function createAppointment(input) {
   const catalog = await getAppointmentCatalog();
   const response = await apiPost(APPOINTMENTS_BASE_PATH, payload);
   return response?.data ? toAgendaAppointment(response.data, catalog) : null;
+}
+
+export async function completeAppointment(id, { receivedBy } = {}) {
+  const catalog = await getAppointmentCatalog();
+  const response = await apiPost(`${APPOINTMENTS_BASE_PATH}/${id}/complete`, {
+    ...(receivedBy ? { receivedBy: mapReceivedByToApi(receivedBy) } : {}),
+  });
+
+  return response?.data
+    ? {
+        appointment: response.data.appointment
+          ? toAgendaAppointment(response.data.appointment, catalog)
+          : null,
+        billing: response.data.billing ? toBillingSummary(response.data.billing) : null,
+      }
+    : null;
 }
 
 export async function updateAppointment(currentAppointment, changes) {
@@ -270,8 +319,7 @@ export async function getDashboardData(referenceDate = new Date()) {
     .filter((appointment) => appointment.status !== "cancelado")
     .reduce((total, appointment) => total + Number(appointment.valorEstimado || 0), 0);
   const faturamentoRecebido = dayAppointments
-    .filter((appointment) => appointment.status === "concluido")
-    .reduce((total, appointment) => total + Number(appointment.valorEstimado || 0), 0);
+    .reduce((total, appointment) => total + Number(appointment.valorRecebido || 0), 0);
 
   const countsByService = dayAppointments.reduce((accumulator, appointment) => {
     accumulator.set(appointment.servico, (accumulator.get(appointment.servico) || 0) + 1);

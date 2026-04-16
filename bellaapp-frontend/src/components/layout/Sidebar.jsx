@@ -1,4 +1,4 @@
-import { Briefcase, Calendar, ChevronLeft, CircleUserRound, DoorClosed, Home, LogOut, User, Users } from "lucide-react";
+import { Briefcase, Calendar, ChevronLeft, CircleUserRound, DoorClosed, Home, LogOut, User, Users, Wallet } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import { logout } from "../../services/authService";
@@ -83,6 +83,11 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
         <NavLink to="/clientes" className="sidebar-link" aria-label="Clientes">
           <Users size={18} />
           {!collapsed && "Clientes"}
+        </NavLink>
+
+        <NavLink to="/caixa" className="sidebar-link" aria-label="Caixa">
+          <Wallet size={18} />
+          {!collapsed && "Caixa"}
         </NavLink>
 
         <NavLink to="/servicos" className="sidebar-link" aria-label="Serviços">

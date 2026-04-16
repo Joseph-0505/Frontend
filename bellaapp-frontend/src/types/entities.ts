@@ -1,4 +1,11 @@
-export type AppointmentStatus = "pendente" | "confirmado" | "concluido" | "cancelado";
+export type AppointmentStatus =
+  | "pendente"
+  | "confirmado"
+  | "concluido"
+  | "cancelado";
+
+export type BillingPaymentStatus = "pendente" | "parcial" | "pago";
+export type ReceivedBy = "clinica" | "profissional";
 
 export interface BusinessProfile {
   businessName: string;
@@ -28,8 +35,14 @@ export interface Appointment {
   profissional: string;
   status: AppointmentStatus;
   valorEstimado: number;
+  valorRecebido?: number;
   duracaoMin?: number;
   endHour?: string;
   observacoes: string;
   notes?: string;
+  receivedBy?: ReceivedBy;
+  billingId?: string;
+  billingAmount?: number;
+  paymentStatus?: Nullable<BillingPaymentStatus>;
+  outstandingAmount?: Nullable<number>;
 }
