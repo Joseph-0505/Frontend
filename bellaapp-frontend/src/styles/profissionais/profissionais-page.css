@@ -26,6 +26,10 @@
   color: var(--danger);
 }
 
+.profissionais-feedback-warning {
+  color: #9a6700;
+}
+
 @media (max-width: 860px) {
   .profissionais-page {
     padding-inline: 0;

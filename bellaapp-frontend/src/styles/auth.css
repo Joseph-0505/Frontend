@@ -155,9 +155,17 @@
   max-width: 620px;
 }
 
+.auth-card-activation {
+  max-width: 560px;
+}
+
 .auth-page-register {
   grid-template-columns: minmax(340px, 500px) minmax(520px, 640px);
   gap: clamp(18px, 2vw, 30px);
+}
+
+.auth-page-activation {
+  grid-template-columns: minmax(340px, 500px) minmax(460px, 560px);
 }
 
 .auth-page-register .auth-card {
@@ -245,6 +253,35 @@
   margin: 0;
   color: var(--text-support);
   line-height: 1.55;
+}
+
+.auth-invite-summary {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(232, 160, 191, 0.18);
+}
+
+.auth-invite-summary div {
+  display: grid;
+  gap: 2px;
+}
+
+.auth-invite-summary span {
+  color: var(--text-light);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-invite-summary strong {
+  color: var(--text-heading);
+  font-size: 0.98rem;
+  line-height: 1.45;
 }
 
 .auth-error {

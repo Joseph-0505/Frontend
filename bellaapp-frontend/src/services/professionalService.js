@@ -3,10 +3,45 @@ import { apiDelete, apiGet, apiPost, apiPut } from "./api";
 
 const PROFESSIONALS_BASE_PATH = "/api/v1/professionals";
 
+function resolveAccessMeta(professional) {
+  const accessStatus = professional.accessStatus || "no_access";
+
+  if (accessStatus === "active") {
+    return {
+      accessLabel: "Acesso ativo",
+      accessTone: "success",
+      canResendInvite: false,
+    };
+  }
+
+  if (accessStatus === "invite_pending") {
+    return {
+      accessLabel: "Convite pendente",
+      accessTone: "warning",
+      canResendInvite: true,
+    };
+  }
+
+  if (accessStatus === "invite_expired") {
+    return {
+      accessLabel: "Convite expirado",
+      accessTone: "danger",
+      canResendInvite: true,
+    };
+  }
+
+  return {
+    accessLabel: "Sem acesso individual",
+    accessTone: "muted",
+    canResendInvite: false,
+  };
+}
+
 function toProfessionalViewModel(professional) {
   const email = professional.email || "";
   const phone = professional.phone || "";
   const specialty = professional.specialty || "";
+  const accessMeta = resolveAccessMeta(professional);
 
   return {
     id: professional.id,
@@ -20,6 +55,11 @@ function toProfessionalViewModel(professional) {
     status: professional.status || "ativo",
     initials: professional.initials || "",
     tone: professional.tone || "rose",
+    accessStatus: professional.accessStatus || "no_access",
+    accessLabel: accessMeta.accessLabel,
+    accessTone: accessMeta.accessTone,
+    canResendInvite: accessMeta.canResendInvite && Boolean(email),
+    inviteExpiresAt: professional.inviteExpiresAt || null,
   };
 }
 
@@ -32,6 +72,13 @@ function toProfessionalPayload(input) {
     phone: formatPhone(input.phone).trim(),
     status: String(input.status || "ativo").trim().toLowerCase(),
     ...(email ? { email } : {}),
+  };
+}
+
+function toInvitePayload(input) {
+  return {
+    name: String(input.name || "").trim(),
+    email: normalizeEmail(input.email),
   };
 }
 
@@ -54,6 +101,16 @@ export async function listProfessionals({ limit = 10, page = 1, search = "", sta
       totalPages: 0,
     },
   };
+}
+
+export async function inviteProfessional(input) {
+  const response = await apiPost(`${PROFESSIONALS_BASE_PATH}/invite`, toInvitePayload(input));
+  return response?.data ? toProfessionalViewModel(response.data) : null;
+}
+
+export async function resendProfessionalInvite(id) {
+  const response = await apiPost(`${PROFESSIONALS_BASE_PATH}/${id}/resend-invite`, {});
+  return response?.data ? toProfessionalViewModel(response.data) : null;
 }
 
 export async function createProfessional(input) {

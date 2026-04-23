@@ -31,6 +31,15 @@ const UI_TO_API_STATUS = {
   cancelado: "CANCELED",
 };
 
+function buildDefaultMeta(page = 1, limit = 1) {
+  return {
+    page,
+    limit,
+    total: 0,
+    totalPages: 0,
+  };
+}
+
 function toIsoLocal(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -199,7 +208,7 @@ function toAgendaAppointment(appointment, catalog) {
   };
 }
 
-async function fetchAppointmentsByDates(dates) {
+async function fetchAppointmentsByDates(dates, professionalId) {
   const responses = await Promise.all(
     dates.map((date) =>
       apiGet(APPOINTMENTS_BASE_PATH, {
@@ -207,6 +216,7 @@ async function fetchAppointmentsByDates(dates) {
           page: 1,
           limit: 100,
           date,
+          ...(professionalId ? { professionalId } : {}),
         },
       })
     )
@@ -215,10 +225,24 @@ async function fetchAppointmentsByDates(dates) {
   return responses.flatMap((response) => response?.data || []);
 }
 
-export async function getAgendaData(referenceDate = new Date()) {
+export async function getAppointmentsMeta({ date, limit = 1, page = 1, professionalId, status } = {}) {
+  const response = await apiGet(APPOINTMENTS_BASE_PATH, {
+    query: {
+      page,
+      limit,
+      ...(date ? { date } : {}),
+      ...(professionalId ? { professionalId } : {}),
+      ...(status ? { status } : {}),
+    },
+  });
+
+  return response?.meta || buildDefaultMeta(page, limit);
+}
+
+export async function getAgendaData(referenceDate = new Date(), options = {}) {
   const dates = getWeekDates(referenceDate);
   const catalog = await getAppointmentCatalog();
-  const appointments = await fetchAppointmentsByDates(dates);
+  const appointments = await fetchAppointmentsByDates(dates, options.professionalId);
 
   return {
     hours: DEFAULT_TIME_SLOTS,
@@ -234,7 +258,7 @@ export async function createAppointment(input) {
   const payload = {
     clientId: input.clientId,
     serviceId: input.serviceId,
-    ...(input.professionalId ? { professionalId: input.professionalId } : {}),
+    professionalId: input.professionalId,
     ...(input.roomId ? { roomId: input.roomId } : {}),
     scheduledAt: buildScheduledAt(input.day || input.data, input.hour || input.hora),
     status: mapUiStatusToApi(input.status),
@@ -287,7 +311,7 @@ export async function updateAppointment(currentAppointment, changes) {
   const payload = {
     clientId: currentAppointment.clientId,
     serviceId: currentAppointment.serviceId,
-    ...(nextProfessionalId ? { professionalId: nextProfessionalId } : {}),
+    professionalId: nextProfessionalId,
     ...(nextRoomId ? { roomId: nextRoomId } : {}),
     scheduledAt: buildScheduledAt(nextDay, nextHour),
     status: mapUiStatusToApi(nextStatus),

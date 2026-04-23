@@ -85,11 +85,6 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
           {!collapsed && "Clientes"}
         </NavLink>
 
-        <NavLink to="/caixa" className="sidebar-link" aria-label="Caixa">
-          <Wallet size={18} />
-          {!collapsed && "Caixa"}
-        </NavLink>
-
         <NavLink to="/servicos" className="sidebar-link" aria-label="Serviços">
           <Briefcase size={18} />
           {!collapsed && "Serviços"}
@@ -103,6 +98,11 @@ export default function Sidebar({ collapsed = false, onToggle = () => {} }) {
         <NavLink to="/profissionais" className="sidebar-link" aria-label="Profissionais">
           <User size={18} />
           {!collapsed && "Profissionais"}
+        </NavLink>
+
+         <NavLink to="/caixa" className="sidebar-link" aria-label="Caixa">
+          <Wallet size={18} />
+          {!collapsed && "Caixa"}
         </NavLink>
       </nav>
 

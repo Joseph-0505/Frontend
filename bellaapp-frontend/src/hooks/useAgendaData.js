@@ -59,7 +59,7 @@ function buildOptimisticAppointment(currentAppointment, changes, professionals, 
   };
 }
 
-export default function useAgendaData(currentDate) {
+export default function useAgendaData(currentDate, professionalId = "") {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [errorStatus, setErrorStatus] = useState(0);
@@ -80,7 +80,9 @@ export default function useAgendaData(currentDate) {
         setError("");
         setErrorStatus(0);
 
-        const data = await getAgendaData(currentDate);
+        const data = await getAgendaData(currentDate, {
+          ...(professionalId ? { professionalId } : {}),
+        });
         if (!active) return;
 
         setHours(data?.hours || []);
@@ -112,7 +114,7 @@ export default function useAgendaData(currentDate) {
     return () => {
       active = false;
     };
-  }, [currentDate, reloadKey]);
+  }, [currentDate, professionalId, reloadKey]);
 
   async function createAppointment(input) {
     const result = await createAgendaAppointment(input);

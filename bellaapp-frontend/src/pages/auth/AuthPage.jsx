@@ -1,7 +1,7 @@
-import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo2.png";
+import AuthPasswordField from "../../components/auth/AuthPasswordField";
 import { isAuthenticated } from "../../services/api";
 import { loginAndStoreSession, register } from "../../services/authService";
 import { showSuccessAlert } from "../../utils/alerts";
@@ -27,52 +27,9 @@ function resolveInitialAuthMode(search) {
   return searchParams.get("mode") === "register" ? "register" : "login";
 }
 
-function PasswordField({
-  fieldId,
-  fieldName,
-  helperText = "",
-  label,
-  onToggleVisibility,
-  onValueChange,
-  placeholder,
-  showPassword,
-  toggleLabel,
-  value,
-  required = true,
-}) {
-  return (
-    <div className="form-group">
-      <label htmlFor={fieldId}>{label}</label>
-      <div className="password-field">
-        <input
-          id={fieldId}
-          name={fieldName}
-          type={showPassword ? "text" : "password"}
-          placeholder={placeholder}
-          value={value}
-          onChange={onValueChange}
-          required={required}
-        />
-
-        <button
-          type="button"
-          className="password-toggle"
-          aria-label={toggleLabel}
-          aria-pressed={showPassword}
-          onClick={onToggleVisibility}
-        >
-          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-        </button>
-      </div>
-
-      {helperText ? <small className="auth-helper">{helperText}</small> : null}
-    </div>
-  );
-}
-
 function getRegisterValidationError(formData) {
   if (!formData.name.trim()) {
-    return "Nome é obrigatório.";
+    return "Nome e obrigatorio.";
   }
 
   const cpfError = validateCpf(formData.cpf);
@@ -143,7 +100,7 @@ export default function AuthPage() {
       }
 
       if (!formData.password) {
-        throw new Error("Senha é obrigatória.");
+        throw new Error("Senha e obrigatoria.");
       }
 
       if (isRegisterMode) {
@@ -160,7 +117,7 @@ export default function AuthPage() {
           cpf: formData.cpf.trim(),
         });
 
-        await showSuccessAlert("Cadastro realizado com sucesso. Faça login para continuar.", {
+        await showSuccessAlert("Cadastro realizado com sucesso. Faca login para continuar.", {
           title: "Conta criada",
           confirmButtonText: "Ir para login",
         });
@@ -179,9 +136,9 @@ export default function AuthPage() {
         password: formData.password,
       });
 
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (requestError) {
-      setError(requestError.message || "Não foi possível autenticar.");
+      setError(requestError.message || "Nao foi possivel autenticar.");
     } finally {
       setSubmitting(false);
     }
@@ -192,7 +149,7 @@ export default function AuthPage() {
       <section className="auth-left">
         <div className={`auth-brand auth-brand-surface ${isRegisterMode ? "auth-brand-compact" : ""}`}>
           <div className="auth-brand-header">
-            <span className="auth-chip">Gestão para estética</span>
+            <span className="auth-chip">Gestao para estetica</span>
           </div>
 
           <div className="auth-brand-media">
@@ -202,7 +159,7 @@ export default function AuthPage() {
           <div className="auth-brand-copy">
             <h1 className="auth-titulo">Bem-vinda</h1>
             <p className="auth-subtitle">
-              Organize seus atendimentos, clientes e serviços em um fluxo mais simples e profissional.
+              Organize seus atendimentos, clientes e servicos em um fluxo mais simples e profissional.
             </p>
           </div>
         </div>
@@ -210,7 +167,7 @@ export default function AuthPage() {
 
       <section className="auth-right">
         <div className={`auth-card ${isRegisterMode ? "auth-card-register" : ""}`}>
-          <div className="auth-mode-toggle" role="tablist" aria-label="Modo de autenticação">
+          <div className="auth-mode-toggle" role="tablist" aria-label="Modo de autenticacao">
             <button
               type="button"
               className={mode === "login" ? "active" : ""}
@@ -232,7 +189,7 @@ export default function AuthPage() {
             <h2>{isRegisterMode ? "Crie sua conta" : "Acesse sua conta"}</h2>
             <p>
               {isRegisterMode
-                ? "Preencha os dados principais da conta em um único formulário."
+                ? "Preencha os dados principais da conta em um unico formulario."
                 : "Entre com email e senha para acessar sua agenda."}
             </p>
           </div>
@@ -287,11 +244,11 @@ export default function AuthPage() {
               />
             </div>
 
-            <PasswordField
+            <AuthPasswordField
               fieldId="auth-password"
               fieldName="password"
               helperText={
-                isRegisterMode ? "Mínimo de 8 caracteres com letra maiúscula, minúscula, número e símbolo." : ""
+                isRegisterMode ? "Minimo de 8 caracteres com letra maiuscula, minuscula, numero e simbolo." : ""
               }
               label="Senha"
               onToggleVisibility={() => setShowPassword((current) => !current)}
@@ -303,7 +260,7 @@ export default function AuthPage() {
             />
 
             {isRegisterMode ? (
-              <PasswordField
+              <AuthPasswordField
                 fieldId="auth-confirm-password"
                 fieldName="confirmPassword"
                 label="Confirmar senha"
@@ -311,7 +268,7 @@ export default function AuthPage() {
                 onValueChange={handleChange}
                 placeholder="Confirme sua senha"
                 showPassword={showConfirmPassword}
-                toggleLabel={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+                toggleLabel={showConfirmPassword ? "Ocultar confirmacao de senha" : "Mostrar confirmacao de senha"}
                 value={formData.confirmPassword}
               />
             ) : null}

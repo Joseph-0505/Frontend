@@ -2,15 +2,16 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import useDisclosure from "./useDisclosure";
 import useUnauthorizedRedirect from "./useUnauthorizedRedirect";
 import {
-  createProfessional,
   deleteProfessional,
+  inviteProfessional,
   listProfessionals,
+  resendProfessionalInvite,
   updateProfessional,
 } from "../services/professionalService";
-import { showConfirmAlert, showErrorAlert } from "../utils/alerts";
+import { showConfirmAlert, showErrorAlert, showSuccessAlert } from "../utils/alerts";
 
 const PAGE_SIZE_OPTIONS = [4, 8, 12];
-const PROFESSIONAL_ROW_ACTIONS = ["Editar", "Excluir"];
+const BASE_PROFESSIONAL_ROW_ACTIONS = ["Editar", "Excluir"];
 
 function buildEmptyMeta(page, limit) {
   return {
@@ -19,6 +20,12 @@ function buildEmptyMeta(page, limit) {
     total: 0,
     totalPages: 0,
   };
+}
+
+function getRowActions(professional) {
+  return professional?.canResendInvite
+    ? ["Reenviar convite", ...BASE_PROFESSIONAL_ROW_ACTIONS]
+    : BASE_PROFESSIONAL_ROW_ACTIONS;
 }
 
 export default function useProfissionaisPage() {
@@ -91,11 +98,26 @@ export default function useProfissionaisPage() {
 
   async function handleCreateProfessional(professionalData) {
     try {
-      await createProfessional(professionalData);
+      const invitedProfessional = await inviteProfessional(professionalData);
       setPage(1);
       setReloadKey((current) => current + 1);
+
+      await showSuccessAlert(
+        invitedProfessional?.email
+          ? `Convite enviado para ${invitedProfessional.email}.`
+          : "Convite enviado com sucesso.",
+        {
+          title: "Profissional adicionado",
+          confirmButtonText: "Continuar",
+        }
+      );
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Não foi possível salvar o profissional.");
+      if (requestError.status === 401) {
+        redirectToLogin();
+        return false;
+      }
+
+      await showErrorAlert(requestError.message || "Nao foi possivel enviar o convite.");
       return false;
     }
 
@@ -112,11 +134,52 @@ export default function useProfissionaisPage() {
       setEditingProfessional(null);
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Não foi possível atualizar o profissional.");
+      if (requestError.status === 401) {
+        redirectToLogin();
+        return false;
+      }
+
+      await showErrorAlert(requestError.message || "Nao foi possivel atualizar o profissional.");
       return false;
     }
 
     return true;
+  }
+
+  async function handleResendInvite(professional) {
+    const confirmed = await showConfirmAlert({
+      title: "Reenviar convite?",
+      text: `Deseja reenviar o convite de acesso para ${professional.name}?`,
+      confirmButtonText: "Reenviar",
+      cancelButtonText: "Cancelar",
+      icon: "question",
+    });
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await resendProfessionalInvite(professional.id);
+      setReloadKey((current) => current + 1);
+
+      await showSuccessAlert(
+        professional.email
+          ? `Novo convite enviado para ${professional.email}.`
+          : "Novo convite enviado com sucesso.",
+        {
+          title: "Convite reenviado",
+          confirmButtonText: "Continuar",
+        }
+      );
+    } catch (requestError) {
+      if (requestError.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      await showErrorAlert(requestError.message || "Nao foi possivel reenviar o convite.");
+    }
   }
 
   async function handleDeleteProfessional(professional) {
@@ -145,13 +208,23 @@ export default function useProfissionaisPage() {
 
       setReloadKey((current) => current + 1);
     } catch (requestError) {
-      await showErrorAlert(requestError.message || "Não foi possível excluir o profissional.");
+      if (requestError.status === 401) {
+        redirectToLogin();
+        return;
+      }
+
+      await showErrorAlert(requestError.message || "Nao foi possivel excluir o profissional.");
     }
   }
 
   function handleProfessionalAction(professional, action) {
     if (action === "Editar") {
       setEditingProfessional(professional);
+      return;
+    }
+
+    if (action === "Reenviar convite") {
+      handleResendInvite(professional);
       return;
     }
 
@@ -203,9 +276,10 @@ export default function useProfissionaisPage() {
     pageSize,
     pageSizeOptions: PAGE_SIZE_OPTIONS,
     professionals: visibleProfessionals,
-    rowActions: PROFESSIONAL_ROW_ACTIONS,
+    rowActions: getRowActions,
     search,
     status,
+    totalProfessionals: meta.total,
     totalPages,
   };
 }

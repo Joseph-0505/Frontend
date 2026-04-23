@@ -8,6 +8,11 @@ export default function SearchStatusFilters({
   onStatusChange,
   statusOptions = [],
   statusDisabled = false,
+  extraValue,
+  onExtraChange,
+  extraOptions = [],
+  extraDisabled = false,
+  extraPlaceholder = "Selecionar",
 }) {
   return (
     <div className="filters-bar">
@@ -30,6 +35,25 @@ export default function SearchStatusFilters({
           </option>
         ))}
       </select>
+
+      {extraOptions.length > 0 ? (
+        <select
+          className="filters-select"
+          value={extraValue}
+          onChange={(event) => onExtraChange?.(event.target.value)}
+          disabled={extraDisabled}
+        >
+          {!extraOptions.some((option) => option.value === extraValue) ? (
+            <option value="">{extraPlaceholder}</option>
+          ) : null}
+
+          {extraOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : null}
     </div>
   );
 }

@@ -13,6 +13,7 @@ export function actionClass(action) {
   if (action === "Inativar") return "is-warning";
   if (action === "Confirmar") return "is-success";
   if (action === "Receber") return "is-success";
+  if (action === "Reenviar convite") return "is-info";
   if (action === "Remarcar") return "is-warning";
   if (action === "Editar") return "is-warning";
   if (action === "Cancelar") return "is-danger";

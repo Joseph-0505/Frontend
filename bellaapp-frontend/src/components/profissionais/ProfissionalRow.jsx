@@ -21,6 +21,10 @@ export default function ProfissionalRow({ actions = DEFAULT_ACTIONS, onAction, p
             <Mail size={16} aria-hidden="true" />
             <span>{professional.emailDisplay}</span>
           </span>
+
+          <span className={`profissional-access-badge profissional-access-badge-${professional.accessTone}`}>
+            {professional.accessLabel}
+          </span>
         </div>
       </div>
 
@@ -42,7 +46,7 @@ export default function ProfissionalRow({ actions = DEFAULT_ACTIONS, onAction, p
         <ProfissionalStatusBadge status={professional.status} />
       </div>
 
-      <div className="profissional-col profissional-col-actions" data-label="Ações">
+      <div className="profissional-col profissional-col-actions" data-label="Acoes">
         <DropdownActions actions={resolvedActions} onAction={(action) => onAction?.(professional, action)} />
       </div>
     </article>

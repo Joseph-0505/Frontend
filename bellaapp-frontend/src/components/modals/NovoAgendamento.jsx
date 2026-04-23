@@ -42,7 +42,10 @@ export default function NovoAgendamento({
   const resolvedDate = initialValues.data || initialValues.day || defaultDate || getTodayIsoDate();
   const resolvedHour = initialValues.hora || initialValues.hour || baseHours[0] || DEFAULT_TIME_SLOTS[0];
   const resolvedProfessionalId =
-    initialValues.professionalId || professionals.find((item) => item.name === initialValues.profissional)?.id || "";
+    initialValues.professionalId ||
+    professionals.find((item) => item.name === initialValues.profissional)?.id ||
+    professionals[0]?.id ||
+    "";
   const resolvedRoomId = initialValues.roomId || "";
 
   const [formData, setFormData] = useState(() => ({
@@ -112,7 +115,7 @@ export default function NovoAgendamento({
       const result = await onSave?.({
         clientId: formData.clientId,
         serviceId: formData.serviceId,
-        ...(formData.professionalId ? { professionalId: formData.professionalId } : {}),
+        professionalId: formData.professionalId,
         ...(formData.roomId ? { roomId: formData.roomId } : {}),
         cliente: selectedClient?.name || "",
         servico: selectedService?.name || "",
@@ -171,10 +174,9 @@ export default function NovoAgendamento({
               name="professionalId"
               value={formData.professionalId}
               onChange={handleChange}
+              required
             >
-              <option value="">
-                {professionals.length > 0 ? "Selecionar profissional" : "Nenhum profissional cadastrado"}
-              </option>
+              <option value="">{professionals.length > 0 ? "Selecionar profissional" : "Nenhum profissional cadastrado"}</option>
               {professionals.map((professional) => (
                 <option key={professional.id} value={professional.id}>
                   {professional.name}
@@ -264,7 +266,7 @@ export default function NovoAgendamento({
           <button
             type="submit"
             className="form-modal-button form-modal-button-primary"
-            disabled={submitting || !formData.hora}
+            disabled={submitting || !formData.hora || !formData.professionalId}
           >
             {submitting ? "Salvando..." : submitLabel}
           </button>

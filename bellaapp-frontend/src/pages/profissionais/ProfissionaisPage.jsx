@@ -1,15 +1,16 @@
-import { Plus } from "lucide-react";
 import Header from "../../components/layout/Header";
 import ProfissionaisModals from "../../components/profissionais/ProfissionaisModals";
 import ProfissionaisPagination from "../../components/profissionais/ProfissionaisPagination";
 import ProfissionaisTable from "../../components/profissionais/ProfissionaisTable";
 import ProfissionaisToolbar from "../../components/profissionais/ProfissionaisToolbar";
+import useAuth from "../../hooks/useAuth";
 import useProfissionaisPage from "../../hooks/useProfissionaisPage";
 import "../../styles/botoes/novo-agendamento.css";
 import "../../styles/botoes/novo-cliente.css";
 import "../../styles/profissionais/profissionais.css";
 
 export default function ProfissionaisPage() {
+  const { user } = useAuth();
   const {
     closeEditingProfessional,
     currentPage,
@@ -33,22 +34,42 @@ export default function ProfissionaisPage() {
     rowActions,
     search,
     status,
+    totalProfessionals,
     totalPages,
   } = useProfissionaisPage();
+
+  const canManageProfessionals = Boolean(user?.permissions?.manageProfessionals);
+  const isIndividualPlan = user?.clinic?.plan === "INDIVIDUAL";
+  const planLimitReached = isIndividualPlan && totalProfessionals >= 1;
+  const disableCreateProfessional = !canManageProfessionals || planLimitReached;
+  const createProfessionalLabel = planLimitReached ? "Plano Individual: 1 profissional" : "Adicionar profissional";
+  const planHint = planLimitReached
+    ? "Seu plano atual permite apenas 1 profissional. Faca upgrade para o plano Team para liberar equipe e agenda multi-profissional."
+    : !canManageProfessionals
+      ? "Apenas administradores da clinica podem gerenciar profissionais."
+      : "";
 
   return (
     <section className="profissionais-page">
       <Header
         title="Profissionais"
-        subtitle="Centralize especialidades, contatos e disponibilidade do seu time em um único painel."
+        subtitle="Gerencie o time da clinica, acompanhe convites e mantenha cada profissional com acesso proprio."
         actions={
-          <button type="button" className="btn-primary" onClick={newProfessionalModal.open}>
-            + Novo Profissional
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={newProfessionalModal.open}
+            disabled={disableCreateProfessional}
+            title={planHint || undefined}
+          >
+            {createProfessionalLabel}
           </button>
         }
       />
 
       <section className="profissionais-board">
+        {planHint ? <p className="profissionais-feedback profissionais-feedback-warning">{planHint}</p> : null}
+
         <ProfissionaisToolbar
           loading={loading}
           onSearchChange={handleSearchChange}
@@ -63,10 +84,12 @@ export default function ProfissionaisPage() {
         {!loading && !error ? (
           <>
             <ProfissionaisTable
-              actions={rowActions}
+              actions={canManageProfessionals ? rowActions : []}
+              createDisabled={disableCreateProfessional}
+              createLabel={planLimitReached ? "Fazer upgrade para cadastrar outro profissional" : undefined}
               isEmptyDatabase={isEmptyDatabase}
-              onAction={handleProfessionalAction}
-              onCreateProfessional={newProfessionalModal.open}
+              onAction={canManageProfessionals ? handleProfessionalAction : undefined}
+              onCreateProfessional={disableCreateProfessional ? undefined : newProfessionalModal.open}
               professionals={professionals}
             />
 

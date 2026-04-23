@@ -18,6 +18,7 @@ import useUnauthorizedRedirect from "../../hooks/useUnauthorizedRedirect";
 import useAgendaWeekNavigation from "../../hooks/useAgendaWeekNavigation";
 import useAgendaData from "../../hooks/useAgendaData";
 import useAgendaMetrics from "../../hooks/useAgendaMetrics";
+import useAuth from "../../hooks/useAuth";
 import { toIsoLocal } from "../../hooks/useAgendaWeekNavigation";
 import { showErrorAlert } from "../../utils/alerts";
 
@@ -25,8 +26,10 @@ import "../../styles/agenda/agenda.css";
 import "../../styles/dashboard/agenda-table.css";
 
 export default function AgendaPage() {
+  const { user } = useAuth();
   const [term, setTerm] = useState("");
   const [status, setStatus] = useState("todos");
+  const [professionalScope, setProfessionalScope] = useState("all");
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [paymentAppointmentId, setPaymentAppointmentId] = useState(null);
   const [newAppointmentInitialValues, setNewAppointmentInitialValues] = useState({});
@@ -35,6 +38,24 @@ export default function AgendaPage() {
   const newAppointmentModal = useDisclosure();
   const newClientModal = useDisclosure();
   const redirectToLogin = useUnauthorizedRedirect();
+
+  useEffect(() => {
+    if (user?.permissions?.viewAllAgenda) {
+      setProfessionalScope("all");
+      return;
+    }
+
+    setProfessionalScope(user?.professional?.id || "");
+  }, [user?.permissions?.viewAllAgenda, user?.professional?.id]);
+
+  const selectedProfessionalId =
+    user?.permissions?.viewAllAgenda
+      ? professionalScope === "all"
+        ? ""
+        : professionalScope === "mine"
+          ? user?.professional?.id || ""
+          : professionalScope
+      : user?.professional?.id || "";
 
   const {
     currentDate,
@@ -57,7 +78,7 @@ export default function AgendaPage() {
     createAppointment,
     refreshAgendaData,
     updateAppointment,
-  } = useAgendaData(currentDate);
+  } = useAgendaData(currentDate, selectedProfessionalId);
 
   useEffect(() => {
     if (errorStatus === 401) {
@@ -87,6 +108,29 @@ export default function AgendaPage() {
     () => normalizedAppointments.find((appointment) => appointment.id === paymentAppointmentId) || null,
     [normalizedAppointments, paymentAppointmentId]
   );
+
+  const professionalFilterOptions = useMemo(() => {
+    if (!user?.permissions?.viewAllAgenda) {
+      return [];
+    }
+
+    const options = [{ value: "all", label: "Todos os profissionais" }];
+
+    if (user?.professional?.id) {
+      options.push({ value: "mine", label: "Minha agenda" });
+    }
+
+    professionals.forEach((professional) => {
+      options.push({
+        value: professional.id,
+        label: professional.name,
+      });
+    });
+
+    return options.filter(
+      (option, index, collection) => collection.findIndex((item) => item.value === option.value) === index
+    );
+  }, [professionals, user?.permissions?.viewAllAgenda, user?.professional?.id]);
 
   function openModal(appointment) {
     setSelectedAppointmentId(appointment.id);
@@ -237,6 +281,10 @@ export default function AgendaPage() {
               statusValue={status}
               onStatusChange={setStatus}
               statusOptions={API_STATUS_OPTIONS}
+              extraValue={professionalScope}
+              onExtraChange={setProfessionalScope}
+              extraOptions={professionalFilterOptions}
+              extraPlaceholder="Filtrar profissional"
             />
 
 

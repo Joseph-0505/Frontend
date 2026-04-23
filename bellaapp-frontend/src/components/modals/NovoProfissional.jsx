@@ -46,13 +46,15 @@ function buildServiceOptions(services = [], currentSpecialty = "") {
 
 export default function NovoProfissional({
   closeOnSave = true,
-  description = "Cadastre nome, especialidade, contato e status operacional do profissional.",
+  description,
   initialValues = {},
+  mode = "edit",
   onClose,
   onSave,
-  submitLabel = "Salvar profissional",
-  title = "Novo Profissional",
+  submitLabel,
+  title,
 }) {
+  const isInviteMode = mode === "invite";
   const [formData, setFormData] = useState(() => ({
     name: initialValues.name || "",
     specialty: initialValues.specialty || initialValues.role || "",
@@ -61,12 +63,19 @@ export default function NovoProfissional({
     status: initialValues.status || "ativo",
   }));
   const [services, setServices] = useState([]);
-  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesLoading, setServicesLoading] = useState(!isInviteMode);
   const [servicesError, setServicesError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const redirectToLogin = useUnauthorizedRedirect();
 
   useEffect(() => {
+    if (isInviteMode) {
+      setServices([]);
+      setServicesLoading(false);
+      setServicesError("");
+      return undefined;
+    }
+
     let active = true;
 
     async function loadServiceCatalog() {
@@ -91,7 +100,7 @@ export default function NovoProfissional({
         }
 
         setServices([]);
-        setServicesError(requestError.message || "Não foi possível carregar os serviços.");
+        setServicesError(requestError.message || "Nao foi possivel carregar os servicos.");
 
         if (requestError.status === 401) {
           redirectToLogin();
@@ -108,12 +117,20 @@ export default function NovoProfissional({
     return () => {
       active = false;
     };
-  }, [redirectToLogin]);
+  }, [isInviteMode, redirectToLogin]);
 
   const specialtyOptions = useMemo(
     () => buildServiceOptions(services, formData.specialty),
     [formData.specialty, services]
   );
+
+  const resolvedTitle = title || (isInviteMode ? "Adicionar profissional" : "Novo Profissional");
+  const resolvedDescription =
+    description
+    || (isInviteMode
+      ? "Cadastre nome e e-mail para enviar o convite de acesso individual."
+      : "Cadastre nome, especialidade, contato e status operacional do profissional.");
+  const resolvedSubmitLabel = submitLabel || (isInviteMode ? "Enviar convite" : "Salvar profissional");
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -134,13 +151,20 @@ export default function NovoProfissional({
     setSubmitting(true);
 
     try {
-      const result = await onSave?.({
-        name: formData.name.trim(),
-        specialty: formData.specialty.trim(),
-        email: normalizeEmail(formData.email),
-        phone: formatPhone(formData.phone).trim(),
-        status: formData.status,
-      });
+      const result = await onSave?.(
+        isInviteMode
+          ? {
+              name: formData.name.trim(),
+              email: normalizeEmail(formData.email),
+            }
+          : {
+              name: formData.name.trim(),
+              specialty: formData.specialty.trim(),
+              email: normalizeEmail(formData.email),
+              phone: formatPhone(formData.phone).trim(),
+              status: formData.status,
+            }
+      );
 
       if (closeOnSave && result !== false) {
         onClose?.();
@@ -151,7 +175,7 @@ export default function NovoProfissional({
   }
 
   return (
-    <FormModalShell description={description} onClose={onClose} size="compact" title={title}>
+    <FormModalShell description={resolvedDescription} onClose={onClose} size="compact" title={resolvedTitle}>
       <form className="form-modal-form" onSubmit={handleSubmit}>
         <div className="form-modal-grid">
           <div className="form-modal-field form-modal-field-full">
@@ -166,42 +190,7 @@ export default function NovoProfissional({
             />
           </div>
 
-          <div className="form-modal-field">
-            <label htmlFor="novo-profissional-especialidade">Especialidade</label>
-            <select
-              id="novo-profissional-especialidade"
-              name="specialty"
-              value={formData.specialty}
-              onChange={handleChange}
-              required
-            >
-              <option value="">
-                {servicesLoading
-                  ? "Carregando serviços..."
-                  : specialtyOptions.length > 0
-                    ? "Selecione um serviço"
-                    : "Nenhum serviço cadastrado"}
-              </option>
-              {specialtyOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-modal-field">
-            <label htmlFor="novo-profissional-status">Status</label>
-            <select id="novo-profissional-status" name="status" value={formData.status} onChange={handleChange}>
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-modal-field">
+          <div className={`form-modal-field ${isInviteMode ? "form-modal-field-full" : ""}`}>
             <label htmlFor="novo-profissional-email">E-mail</label>
             <input
               id="novo-profissional-email"
@@ -214,28 +203,74 @@ export default function NovoProfissional({
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
+              required={isInviteMode}
             />
           </div>
 
-          <div className="form-modal-field">
-            <label htmlFor="novo-profissional-telefone">Telefone</label>
-            <input
-              id="novo-profissional-telefone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="(11) 99999-9999"
-              inputMode="numeric"
-              maxLength={15}
-              required
-            />
-          </div>
+          {!isInviteMode ? (
+            <>
+              <div className="form-modal-field">
+                <label htmlFor="novo-profissional-especialidade">Especialidade</label>
+                <select
+                  id="novo-profissional-especialidade"
+                  name="specialty"
+                  value={formData.specialty}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">
+                    {servicesLoading
+                      ? "Carregando servicos..."
+                      : specialtyOptions.length > 0
+                        ? "Selecione um servico"
+                        : "Nenhum servico cadastrado"}
+                  </option>
+                  {specialtyOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-modal-field">
+                <label htmlFor="novo-profissional-status">Status</label>
+                <select id="novo-profissional-status" name="status" value={formData.status} onChange={handleChange}>
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-modal-field">
+                <label htmlFor="novo-profissional-telefone">Telefone</label>
+                <input
+                  id="novo-profissional-telefone"
+                  name="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="(11) 99999-9999"
+                  inputMode="numeric"
+                  maxLength={15}
+                  required
+                />
+              </div>
+            </>
+          ) : null}
         </div>
 
-        {servicesError ? (
+        {!isInviteMode && servicesError ? (
           <div className="form-modal-helper">
-            <strong>Serviços indisponíveis.</strong> Atualize a página para tentar carregar o catálogo novamente.
+            <strong>Servicos indisponiveis.</strong> Atualize a pagina para tentar carregar o catalogo novamente.
+          </div>
+        ) : null}
+
+        {isInviteMode ? (
+          <div className="form-modal-helper">
+            O profissional recebera um e-mail para criar a propria senha e acessar a BellaApp com login individual.
           </div>
         ) : null}
 
@@ -250,7 +285,7 @@ export default function NovoProfissional({
           </button>
 
           <button type="submit" className="form-modal-button form-modal-button-primary" disabled={submitting}>
-            {submitting ? "Salvando..." : submitLabel}
+            {submitting ? (isInviteMode ? "Enviando..." : "Salvando...") : resolvedSubmitLabel}
           </button>
         </div>
       </form>

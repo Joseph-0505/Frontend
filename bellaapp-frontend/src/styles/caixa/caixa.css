@@ -14,6 +14,22 @@
   margin-bottom: 16px;
 }
 
+.cash-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cash-scope-select {
+  min-width: 220px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+
 .cash-panel-header h2 {
   margin: 0 0 4px;
 }
@@ -72,6 +88,14 @@
   .cash-panel-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .cash-actions {
+    width: 100%;
+  }
+
+  .cash-scope-select {
+    width: 100%;
   }
 
   .cash-table th,

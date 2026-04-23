@@ -5,6 +5,8 @@ const PROFESSIONAL_TABLE_COLUMNS = ["Profissional", "Especialidade", "Telefone",
 
 export default function ProfissionaisTable({
   actions = [],
+  createDisabled = false,
+  createLabel,
   isEmptyDatabase = false,
   onAction,
   onCreateProfessional,
@@ -30,6 +32,8 @@ export default function ProfissionaisTable({
           ))
         ) : (
           <ProfissionaisEmptyState
+            createDisabled={createDisabled}
+            createLabel={createLabel}
             isEmptyDatabase={isEmptyDatabase}
             onCreateProfessional={onCreateProfessional}
           />

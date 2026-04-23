@@ -68,3 +68,37 @@ export async function showConfirmAlert(options = {}) {
 
   return result.isConfirmed;
 }
+
+export async function showNumberPrompt(options = {}) {
+  const result = await Swal.fire({
+    ...BASE_ALERT_OPTIONS,
+    icon: options.icon || "question",
+    title: options.title || "Informe um valor",
+    text: options.text || "",
+    input: "number",
+    inputLabel: options.inputLabel || "Valor",
+    inputValue: options.inputValue ?? 0,
+    inputAttributes: {
+      min: String(options.min ?? 0),
+      step: String(options.step ?? "0.01"),
+      inputmode: "decimal",
+      ...options.inputAttributes,
+    },
+    showCancelButton: true,
+    confirmButtonText: options.confirmButtonText || "Confirmar",
+    cancelButtonText: options.cancelButtonText || "Cancelar",
+    preConfirm: (value) => {
+      const numericValue = Number(value);
+
+      if (!Number.isFinite(numericValue) || numericValue < Number(options.min ?? 0)) {
+        Swal.showValidationMessage(options.validationMessage || "Informe um valor válido.");
+        return false;
+      }
+
+      return numericValue;
+    },
+    ...options,
+  });
+
+  return result.isConfirmed ? Number(result.value) : null;
+}

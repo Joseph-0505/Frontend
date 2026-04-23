@@ -11,6 +11,7 @@
 }
 
 .form-modal-card {
+  overflow-x: hidden;
   overflow-y: auto;
   max-height: calc(100dvh - 48px);
   border-radius: 28px;
@@ -35,18 +36,30 @@
 }
 
 .form-modal-card::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(216, 114, 154, 0.9) 0%, rgba(182, 86, 130, 0.9) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(216, 114, 154, 0.9) 0%,
+    rgba(182, 86, 130, 0.9) 100%
+  );
   border-radius: 999px;
   border: 2px solid rgba(255, 255, 255, 0.35);
   background-clip: padding-box;
 }
 
 .form-modal-card::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(216, 114, 154, 1) 0%, rgba(182, 86, 130, 1) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(216, 114, 154, 1) 0%,
+    rgba(182, 86, 130, 1) 100%
+  );
 }
 
 .form-modal-card.form-modal-card-compact {
   width: min(100%, 700px);
+}
+
+.form-modal-card.form-modal-card-wide {
+  width: min(100%, 980px);
 }
 
 .form-modal-header {
@@ -103,6 +116,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .form-modal-field-full {

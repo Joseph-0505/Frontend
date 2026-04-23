@@ -10,13 +10,21 @@ export default function ProfissionaisModals({
   return (
     <>
       {newProfessionalModal.isOpen ? (
-        <NovoProfissional onClose={newProfessionalModal.close} onSave={onCreateProfessional} />
+        <NovoProfissional
+          mode="invite"
+          title="Adicionar profissional"
+          submitLabel="Enviar convite"
+          description="Cadastre nome e e-mail para enviar o convite de acesso individual."
+          onClose={newProfessionalModal.close}
+          onSave={onCreateProfessional}
+        />
       ) : null}
 
       {editingProfessional ? (
         <NovoProfissional
-          title="Editar Profissional"
-          submitLabel="Salvar alterações"
+          mode="edit"
+          title="Editar profissional"
+          submitLabel="Salvar alteracoes"
           initialValues={editingProfessional}
           onClose={onCloseEditingProfessional}
           onSave={onUpdateProfessional}

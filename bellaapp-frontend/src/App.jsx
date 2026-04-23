@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 import AgendaPage from "./pages/agenda/AgendaPage";
+import ActivateAccountPage from "./pages/auth/ActivateAccountPage";
 import AuthPage from "./pages/auth/AuthPage";
 import ClientesPage from "./pages/clientes/ClientesPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
@@ -117,6 +118,7 @@ function App() {
             </PublicOnlyRoute>
           }
         />
+        <Route path="/ativar-conta" element={<ActivateAccountPage />} />
         <Route path="/onboarding" element={<OnboardingRoute />} />
         <Route path="/onboarding/preview" element={<OnboardingPreviewRoute />} />
 

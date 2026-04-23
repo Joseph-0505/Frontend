@@ -22,7 +22,7 @@ export default function FormModalShell({ children, description, onClose, size = 
   return (
     <div className="form-modal-overlay" onClick={onClose}>
       <div
-        className={`form-modal-card ${size === "compact" ? "form-modal-card-compact" : ""}`.trim()}
+        className={`form-modal-card ${size !== "default" ? `form-modal-card-${size}` : ""}`.trim()}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="form-modal-header">
