@@ -1,6 +1,10 @@
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
 const SESSION_STORAGE_KEY = "bellaapp.session";
 const SESSION_CHANGE_EVENT = "bellaapp:session-change";
+const AUTH_BASE_PATH = "/api/v1/auth";
+const TOKEN_REFRESH_WINDOW_MS = 15000;
+
+let refreshInFlightPromise = null;
 
 export class ApiError extends Error {
   constructor(message, { code = "API_ERROR", details = null, status = 500 } = {}) {
@@ -86,6 +90,100 @@ function buildUrl(path, query) {
   return url.toString();
 }
 
+function decodeBase64Url(value) {
+  const normalizedValue = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = normalizedValue.length % 4;
+  const paddedValue = padding === 0 ? normalizedValue : `${normalizedValue}${"=".repeat(4 - padding)}`;
+
+  if (hasWindow() && typeof window.atob === "function") {
+    return window.atob(paddedValue);
+  }
+
+  return "";
+}
+
+function readTokenExpirationInMs(token) {
+  if (!token || typeof token !== "string") {
+    return null;
+  }
+
+  const tokenParts = token.split(".");
+  if (tokenParts.length < 2) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(decodeBase64Url(tokenParts[1]));
+    if (typeof payload?.exp !== "number") {
+      return null;
+    }
+
+    return payload.exp * 1000;
+  } catch {
+    return null;
+  }
+}
+
+function shouldRefreshAccessToken(token) {
+  const expirationInMs = readTokenExpirationInMs(token);
+
+  if (!expirationInMs) {
+    return false;
+  }
+
+  return Date.now() >= expirationInMs - TOKEN_REFRESH_WINDOW_MS;
+}
+
+async function refreshSessionIfNeeded(force = false) {
+  const currentSession = getSession();
+
+  if (!currentSession?.refreshToken) {
+    return null;
+  }
+
+  if (!force && !shouldRefreshAccessToken(currentSession.token)) {
+    return currentSession;
+  }
+
+  if (!refreshInFlightPromise) {
+    refreshInFlightPromise = (async () => {
+      const refreshResponse = await fetch(buildUrl(`${AUTH_BASE_PATH}/refresh`), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken: currentSession.refreshToken }),
+      });
+
+      const refreshResponseBody = await parseResponseBody(refreshResponse);
+
+      if (!refreshResponse.ok) {
+        clearSession();
+        const { code, details, message } = extractErrorPayload(refreshResponseBody);
+        throw new ApiError(message, {
+          code,
+          details,
+          status: refreshResponse.status,
+        });
+      }
+
+      const refreshedSession = refreshResponseBody?.data || null;
+
+      if (!refreshedSession?.token) {
+        clearSession();
+        return null;
+      }
+
+      setSession(refreshedSession);
+      return refreshedSession;
+    })().finally(() => {
+      refreshInFlightPromise = null;
+    });
+  }
+
+  return refreshInFlightPromise;
+}
+
 async function parseResponseBody(response) {
   if (response.status === 204) {
     return null;
@@ -127,8 +225,9 @@ function extractErrorPayload(body) {
 }
 
 async function request(path, options = {}) {
-  const { auth = true, body, headers = {}, method = "GET", query, ...rest } = options;
-  const token = auth ? getAccessToken() : "";
+  const { auth = true, body, headers = {}, method = "GET", query, __skip401Retry = false, ...rest } = options;
+  const session = auth ? await refreshSessionIfNeeded(false).catch(() => getSession()) : null;
+  const token = auth ? session?.token || getAccessToken() : "";
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   const resolvedHeaders = {
     ...(isFormData ? {} : body !== undefined ? { "Content-Type": "application/json" } : {}),
@@ -156,6 +255,18 @@ async function request(path, options = {}) {
   const responseBody = await parseResponseBody(response);
 
   if (!response.ok) {
+    if (auth && response.status === 401 && !__skip401Retry) {
+      try {
+        const refreshedSession = await refreshSessionIfNeeded(true);
+
+        if (refreshedSession?.token) {
+          return request(path, { ...options, __skip401Retry: true });
+        }
+      } catch {
+        // A limpeza da sessão já foi feita no fluxo de refresh.
+      }
+    }
+
     if (auth && response.status === 401) {
       clearSession();
     }

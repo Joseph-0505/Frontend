@@ -16,7 +16,8 @@ export interface BusinessProfile {
 
 export interface ClinicSummary {
   id: ID;
-  plan: "INDIVIDUAL" | "TEAM";
+  plan: "TRIAL" | "INDIVIDUAL" | "TEAM";
+  trialEndsAt: Nullable<string>;
 }
 
 export interface UserMembership {

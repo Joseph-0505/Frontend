@@ -14,7 +14,8 @@ interface ApiBusinessProfile {
 
 interface ApiClinic {
   id: ID;
-  plan?: "INDIVIDUAL" | "TEAM" | null;
+  plan?: "TRIAL" | "INDIVIDUAL" | "TEAM" | null;
+  trialEndsAt?: string | null;
 }
 
 interface ApiMembership {
@@ -97,7 +98,13 @@ function toUserViewModel(user: Nullable<ApiUser>): Nullable<UserProfile> {
     clinic: user.clinic
       ? {
           id: user.clinic.id,
-          plan: user.clinic.plan === "TEAM" ? "TEAM" : "INDIVIDUAL",
+          plan:
+            user.clinic.plan === "TEAM"
+              ? "TEAM"
+              : user.clinic.plan === "TRIAL"
+                ? "TRIAL"
+                : "INDIVIDUAL",
+          trialEndsAt: user.clinic.trialEndsAt || null,
         }
       : null,
     membership: user.membership

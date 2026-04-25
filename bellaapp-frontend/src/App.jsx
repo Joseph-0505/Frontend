@@ -12,6 +12,7 @@ import CaixaPage from "./pages/caixa/CaixaPage";
 import RoomsPage from "./pages/rooms/RoomsPage";
 import ServicosPage from "./pages/servicos/ServicosPage";
 import ProfissionaisPage from "./pages/profissionais/ProfissionaisPage";
+import PlansPage from "./pages/planos/PlansPage";
 import OnboardingPage from "./pages/onboarding/OnboardingPage";
 import useAuth from "./hooks/useAuth";
 
@@ -130,6 +131,7 @@ function App() {
           <Route path="/rooms" element={<RoomsPage />} />
           <Route path="/servicos" element={<ServicosPage />} />
           <Route path="/profissionais" element={<ProfissionaisPage />} />
+          <Route path="/planos" element={<PlansPage />} />
           <Route path="/perfil" element={<ProfilePage />} />
         </Route>
 
